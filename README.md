@@ -58,3 +58,6 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 # Scan-for-a-Word
 A structured 8-week Scrum delivery plan for the “Scan for a Word” platform, covering user stories, sprint goals, and developer tasks across core web search, media playback, chatbot integration, and AI-driven personalized daily word delivery.
+
+## Documentation
+- [API Usage Guide](guides/API_DOCUMENTATION.md)
