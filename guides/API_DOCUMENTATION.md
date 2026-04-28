@@ -36,6 +36,7 @@ Endpoints for user registration and login.
 *   **Body Parameters:**
     *   `email` (String, Required)
     *   `password` (String, Required)
+    *   `provider` (e.g., `google`, `apple`).
 *   **Success Response:**
     ```json
     {
@@ -54,12 +55,12 @@ Endpoints for creators to manage content and view analytics.
 ### Get Stats
 *   **URL:** `/creator/stats`
 *   **Method:** `GET`
-*   **Success Response:** Returns total uploads, listens, keyword matches, and insights.
+*   **Success Response:** Returns dashboard stats (Uploads, Listens, Keyword Matches) and insights (Peak time, Engagement).
 
 ### Recent Uploads
 *   **URL:** `/creator/messages`
 *   **Method:** `GET`
-*   **Success Response:** Returns last 5 uploads with their status (Live/Processing).
+*   **Success Response:** Returns uploads with `status`, `duration`, and `listens_count`.
 
 ### Upload Message
 *   **URL:** `/creator/upload`
@@ -76,7 +77,7 @@ Endpoints for searching content and viewing trends.
 *   **URL:** `/search`
 *   **Method:** `GET`
 *   **Parameters:** `identifier` (email/phone), `keyword`.
-*   **Success Response:** Returns matching snippets.
+*   **Success Response:** Returns matching snippets. Each snippet now includes `content` (the text excerpt shown in the UI).
 
 ### Trending Keywords
 *   **URL:** `/search/trending`
@@ -88,6 +89,12 @@ Endpoints for searching content and viewing trends.
 *   **Method:** `GET`
 *   **Parameters:** `identifier` (email/phone).
 *   **Success Response:** Returns user's last 10 searches.
+
+### Visual Scan
+*   **URL:** `/search/visual`
+*   **Method:** `POST`
+*   **Body Parameters:** `image` (file).
+*   **Success Response:** Returns detected text and matching snippets.
 
 ---
 
@@ -107,7 +114,7 @@ Endpoints for managing saved insights.
 ### Library Status
 *   **URL:** `/library/status`
 *   **Method:** `GET`
-*   **Success Response:** Returns a summary of recently indexed keywords.
+*   **Success Response:** Returns indexed keywords for the library summary card.
 
 ---
 

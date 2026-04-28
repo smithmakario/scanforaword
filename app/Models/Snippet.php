@@ -12,6 +12,7 @@ class Snippet extends Model
         'video_url',
         'thumbnail_url',
         'duration',
+        'content',
     ];
 
     public function message()

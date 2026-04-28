@@ -77,4 +77,19 @@ class AuthController extends Controller
             'message' => 'Logged out'
         ]);
     }
+
+    public function socialLogin(Request $request)
+    {
+        // Placeholder for social login logic (Google/Apple)
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Social login successful (Simulation)',
+            'data' => [
+                'name' => 'Social User',
+                'email' => $request->email ?? 'social@example.com',
+            ],
+            'access_token' => 'simulated_token',
+            'token_type' => 'Bearer'
+        ]);
+    }
 }

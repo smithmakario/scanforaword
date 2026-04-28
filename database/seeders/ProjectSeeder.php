@@ -19,11 +19,13 @@ class ProjectSeeder extends Seeder
             'speaker' => 'Apostle Segun Obadje',
         ]);
 
-        $snippet = $message->snippets()->create([
+        $snippet = \App\Models\Snippet::create([
+            'message_id' => $message->id,
             'title' => 'The Definition of Faith',
             'video_url' => 'https://example.com/snippets/faith-def.mp4',
             'thumbnail_url' => 'https://example.com/thumbnails/faith.jpg',
             'duration' => 90,
+            'content' => '...it is the substance of things hoped for, the evidence of things not seen. True Faith acts as a bridge between the physical void and the spiritual harvest...',
         ]);
 
         $keyword = \App\Models\Keyword::create(['name' => 'faith']);

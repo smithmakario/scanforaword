@@ -19,6 +19,7 @@ Route::get('/health', function () {
 // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login/social', [AuthController::class, 'socialLogin']); // Placeholder for Google/Apple
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'profile']);
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/search', [SearchController::class, 'search']);
 Route::get('/search/trending', [SearchController::class, 'getTrendingKeywords']);
 Route::get('/search/history', [SearchController::class, 'getSearchHistory']);
+Route::post('/search/visual', [SearchController::class, 'visualScan']); // For OCR searching
 
 // Daily Word Routes
 Route::get('/categories', [DailyWordController::class, 'getCategories']);

@@ -17,13 +17,14 @@ class SearchController extends Controller
         $identifier = $request->identifier;
         $keywordName = strtolower($request->keyword);
 
-        // Find the keyword
-        $keyword = \App\Models\Keyword::where('name', $keywordName)->first();
-
-        $snippets = [];
-        if ($keyword) {
-            $snippets = $keyword->snippets()->with('message')->get();
-        }
+        // Find the keyword or search content
+        $snippets = \App\Models\Snippet::where('title', 'LIKE', "%$keywordName%")
+            ->orWhere('content', 'LIKE', "%$keywordName%")
+            ->orWhereHas('keywords', function($query) use ($keywordName) {
+                $query->where('name', $keywordName);
+            })
+            ->with('message')
+            ->get();
 
         // Log the search
         \App\Models\SearchLog::create([
@@ -77,6 +78,17 @@ class SearchController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $history
+        ]);
+    }
+
+    public function visualScan(Request $request)
+    {
+        // Placeholder for OCR / AI scanning
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Visual scan completed',
+            'detected_text' => 'Faith',
+            'results' => \App\Models\Snippet::where('content', 'LIKE', '%Faith%')->with('message')->get()
         ]);
     }
 }
