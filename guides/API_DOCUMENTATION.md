@@ -11,6 +11,10 @@ All API requests should be made to:
 ## 1. Authentication
 Endpoints for user registration and login.
 
+### Authentication Headers
+For all "Auth Required" endpoints, include the following header:
+`Authorization: Bearer <your_access_token>`
+
 ### Register
 *   **URL:** `/register`
 *   **Method:** `POST`
@@ -137,9 +141,31 @@ Endpoints for personalized daily word delivery.
 
 ---
 
+---
+
+## 6. Security & RBAC
+The API implements several security protocols to protect data and resources.
+
+### Role-Based Access Control (RBAC)
+Certain endpoints are restricted based on user roles:
+- **User**: Can search, save bookmarks, and set preferences.
+- **Creator**: Can access the Creator Dashboard and upload new messages.
+Accessing a restricted route without the correct role will return a `403 Forbidden` error.
+
+### Rate Limiting
+To prevent abuse, all API endpoints are rate-limited to **60 requests per minute** per user/IP.
+Exceeding this limit will return a `429 Too Many Requests` error.
+
+### CORS
+CORS is enabled for all `api/*` paths to allow seamless integration with web frontends.
+
+---
+
 ## Error Handling
 Standard HTTP status codes are used:
 - `200 OK`: Success.
 - `401 Unauthorized`: Authentication missing or failed.
+- `403 Forbidden`: Authenticated but lacks the required role (RBAC).
 - `422 Unprocessable Content`: Validation error.
+- `429 Too Many Requests`: Rate limit exceeded.
 - `404 Not Found`: Resource does not exist.
