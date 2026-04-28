@@ -42,4 +42,41 @@ class SearchController extends Controller
             'data' => $snippets,
         ]);
     }
+
+    public function getTrendingKeywords()
+    {
+        // Get keywords with most searches in logs
+        $trending = \App\Models\SearchLog::select('keyword', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+            ->groupBy('keyword')
+            ->orderBy('total', 'desc')
+            ->take(5)
+            ->pluck('keyword');
+
+        // Fallback if no logs
+        if ($trending->isEmpty()) {
+            $trending = ['Peace', 'Resilience', 'Clarity', 'Kindness', 'Gratitude'];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $trending
+        ]);
+    }
+
+    public function getSearchHistory(Request $request)
+    {
+        $request->validate([
+            'identifier' => 'required|string',
+        ]);
+
+        $history = \App\Models\SearchLog::where('email_or_phone', $request->identifier)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $history
+        ]);
+    }
 }

@@ -23,4 +23,9 @@ class Snippet extends Model
     {
         return $this->belongsToMany(Keyword::class);
     }
+
+    public function bookmarks()
+    {
+        return $this->hasMany(Bookmark::class);
+    }
 }

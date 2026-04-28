@@ -8,152 +8,132 @@ All API requests should be made to:
 
 ---
 
-## 1. Health Check
-Verify if the API is up and running.
+## 1. Authentication
+Endpoints for user registration and login.
 
-*   **URL:** `/health`
-*   **Method:** `GET`
-*   **Auth Required:** No
+### Register
+*   **URL:** `/register`
+*   **Method:** `POST`
+*   **Body Parameters:**
+    *   `name` (String, Required)
+    *   `email` (String, Required, Unique)
+    *   `phone_number` (String, Optional)
+    *   `password` (String, Required, Min: 8)
+    *   `role` (String, Optional, default: `user`, choices: `user`, `creator`)
 *   **Success Response:**
-    *   **Code:** 200 OK
-    *   **Content:**
-        ```json
-        {
-          "status": "ok",
-          "message": "Laravel API is running",
-          "timestamp": "2026-04-24T07:44:36Z"
-        }
-        ```
+    ```json
+    {
+      "status": "success",
+      "data": { ...user_info },
+      "access_token": "...",
+      "token_type": "Bearer"
+    }
+    ```
+
+### Login
+*   **URL:** `/login`
+*   **Method:** `POST`
+*   **Body Parameters:**
+    *   `email` (String, Required)
+    *   `password` (String, Required)
+*   **Success Response:**
+    ```json
+    {
+      "status": "success",
+      "data": { ...user_info },
+      "access_token": "...",
+      "token_type": "Bearer"
+    }
+    ```
 
 ---
 
-## 2. Search API
-Search for teaching snippets based on keywords.
+## 2. Creator Dashboard (Auth Required)
+Endpoints for creators to manage content and view analytics.
 
+### Get Stats
+*   **URL:** `/creator/stats`
+*   **Method:** `GET`
+*   **Success Response:** Returns total uploads, listens, keyword matches, and insights.
+
+### Recent Uploads
+*   **URL:** `/creator/messages`
+*   **Method:** `GET`
+*   **Success Response:** Returns last 5 uploads with their status (Live/Processing).
+
+### Upload Message
+*   **URL:** `/creator/upload`
+*   **Method:** `POST`
+*   **Body Parameters:** `title`, `description`, `speaker`, `full_url`, `duration`.
+*   **Success Response:** Returns the newly created message with `status: processing`.
+
+---
+
+## 3. Search & Discovery
+Endpoints for searching content and viewing trends.
+
+### Search
 *   **URL:** `/search`
 *   **Method:** `GET`
-*   **Parameters:**
-    *   `identifier` (String, Required): The user's email or phone number.
-    *   `keyword` (String, Required): The search term (e.g., "faith", "grace").
-*   **Auth Required:** No (Identifier-based tracking)
-*   **Success Response:**
-    *   **Code:** 200 OK
-    *   **Content:**
-        ```json
-        {
-          "status": "success",
-          "query": {
-            "identifier": "test@example.com",
-            "keyword": "faith"
-          },
-          "results_count": 1,
-          "data": [
-            {
-              "id": 1,
-              "message_id": 1,
-              "title": "The Definition of Faith",
-              "video_url": "https://example.com/snippets/faith-def.mp4",
-              "thumbnail_url": "https://example.com/thumbnails/faith.jpg",
-              "duration": 90,
-              "message": {
-                "id": 1,
-                "title": "Understanding Faith",
-                "description": "A comprehensive teaching...",
-                "full_url": "https://example.com/full-message/faith",
-                "speaker": "Apostle Segun Obadje"
-              }
-            }
-          ]
-        }
-        ```
+*   **Parameters:** `identifier` (email/phone), `keyword`.
+*   **Success Response:** Returns matching snippets.
+
+### Trending Keywords
+*   **URL:** `/search/trending`
+*   **Method:** `GET`
+*   **Success Response:** Returns top 5 trending keywords based on search logs.
+
+### Search History
+*   **URL:** `/search/history`
+*   **Method:** `GET`
+*   **Parameters:** `identifier` (email/phone).
+*   **Success Response:** Returns user's last 10 searches.
 
 ---
 
-## 3. Categories API
-Fetch all available life experience categories for daily word subscription.
+## 4. Library & Bookmarks (Auth Required)
+Endpoints for managing saved insights.
 
+### Get Bookmarks
+*   **URL:** `/bookmarks`
+*   **Method:** `GET`
+*   **Success Response:** Returns user's bookmarked snippets.
+
+### Toggle Bookmark
+*   **URL:** `/snippets/{id}/bookmark`
+*   **Method:** `POST`
+*   **Success Response:** Adds or removes bookmark.
+
+### Library Status
+*   **URL:** `/library/status`
+*   **Method:** `GET`
+*   **Success Response:** Returns a summary of recently indexed keywords.
+
+---
+
+## 5. Daily Word & Preferences
+Endpoints for personalized daily word delivery.
+
+### Get Categories
 *   **URL:** `/categories`
 *   **Method:** `GET`
-*   **Auth Required:** No
-*   **Success Response:**
-    *   **Code:** 200 OK
-    *   **Content:**
-        ```json
-        {
-          "status": "success",
-          "data": [
-            { "id": 1, "name": "Faith" },
-            { "id": 2, "name": "Growth" }
-          ]
-        }
-        ```
+*   **Success Response:** Returns all life experience categories.
 
----
-
-## 4. User Preferences API
-Set or update the user's category preferences for the daily word.
-
+### Set Preferences
 *   **URL:** `/preferences`
 *   **Method:** `POST`
-*   **Headers:** `Content-Type: application/json`
-*   **Body Parameters:**
-    *   `identifier` (String, Required): Email or phone number.
-    *   `categories` (Array of Integers, Required): List of category IDs.
-*   **Success Response:**
-    *   **Code:** 200 OK
-    *   **Content:**
-        ```json
-        {
-          "status": "success",
-          "message": "Preferences updated successfully"
-        }
-        ```
+*   **Body Parameters:** `identifier`, `categories` (array of IDs).
 
----
-
-## 5. Daily Word API
-Fetch today's scheduled word based on user preferences.
-
+### Get Today's Daily Word
 *   **URL:** `/daily-word`
 *   **Method:** `GET`
-*   **Parameters:**
-    *   `identifier` (String, Required): Email or phone number.
-*   **Success Response:**
-    *   **Code:** 200 OK
-    *   **Content:**
-        ```json
-        {
-          "status": "success",
-          "data": {
-            "id": 1,
-            "scheduled_for": "2026-04-24",
-            "snippet": {
-              "id": 1,
-              "title": "The Definition of Faith",
-              "video_url": "...",
-              "message": { "title": "Understanding Faith", "speaker": "..." }
-            }
-          }
-        }
-        ```
+*   **Parameters:** `identifier`.
 
 ---
 
 ## Error Handling
-The API uses standard HTTP status codes. Common errors:
-
-| Code | Meaning | Description |
-| :--- | :--- | :--- |
-| 422 | Unprocessable Content | Validation failed (e.g., missing identifier). |
-| 404 | Not Found | Route or resource not found. |
-| 500 | Internal Server Error | Something went wrong on the server. |
-
-Example Validation Error:
-```json
-{
-  "message": "The identifier field is required.",
-  "errors": {
-    "identifier": ["The identifier field is required."]
-  }
-}
-```
+Standard HTTP status codes are used:
+- `200 OK`: Success.
+- `401 Unauthorized`: Authentication missing or failed.
+- `422 Unprocessable Content`: Validation error.
+- `404 Not Found`: Resource does not exist.
