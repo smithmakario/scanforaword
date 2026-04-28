@@ -36,7 +36,6 @@ Endpoints for user registration and login.
 *   **Body Parameters:**
     *   `email` (String, Required)
     *   `password` (String, Required)
-    *   `provider` (e.g., `google`, `apple`).
 *   **Success Response:**
     ```json
     {
