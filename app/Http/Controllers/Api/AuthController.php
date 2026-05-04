@@ -42,14 +42,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!\Illuminate\Support\Facades\Auth::attempt($request->only('email', 'password'))) {
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid login details'
+                'message' => 'Invalid email or password'
             ], 401);
         }
 
-        $user = \App\Models\User::where('email', $request['email'])->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

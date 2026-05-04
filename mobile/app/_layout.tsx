@@ -32,7 +32,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         )}
         <Stack.Screen 
-          name="player" 
+          name="(tabs)/player" 
           options={{ 
             headerShown: false,
             presentation: 'fullScreenModal',
@@ -40,14 +40,14 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
-          name="upload" 
+          name="(tabs)/upload" 
           options={{ 
             headerShown: false,
             presentation: 'modal',
           }} 
         />
         <Stack.Screen 
-          name="categories" 
+          name="(tabs)/categories" 
           options={{ 
             headerShown: false,
             presentation: 'modal',
