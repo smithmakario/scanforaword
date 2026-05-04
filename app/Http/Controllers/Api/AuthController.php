@@ -11,15 +11,22 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users',
             'phone_number' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'nullable|string|in:user,creator'
         ]);
 
+        if (empty($validated['email']) && empty($validated['phone_number'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Email or phone number is required'
+            ], 422);
+        }
+
         $user = \App\Models\User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => $validated['email'] ?? null,
             'phone_number' => $validated['phone_number'] ?? null,
             'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
             'role' => $validated['role'] ?? 'user',

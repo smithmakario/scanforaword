@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://192.168.18.6:8000/api';
+const BASE_URL = 'http://192.168.18.17:8000/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -37,13 +37,25 @@ export const authAPI = {
     password: string;
     role?: string;
   }) => {
-    const response = await api.post('/register', data);
-    return response.data;
+    try {
+      const response = await api.post('/register', data);
+      console.log('Register response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.log('Register error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   login: async (email: string, password: string) => {
-    const response = await api.post('/login', { email, password });
-    return response.data;
+    try {
+      const response = await api.post('/login', { email, password });
+      console.log('Login response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.log('Login error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   logout: async () => {
