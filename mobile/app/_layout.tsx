@@ -5,7 +5,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { Colors } from '../src/constants/theme';
 
 export default function RootLayout() {
-  const { isAuthenticated, isVerified, initialize, isLoading } = useAuthStore();
+  const { isAuthenticated, isVerified, initialize, isLoading, user } = useAuthStore();
 
   useEffect(() => {
     initialize();
@@ -32,22 +32,14 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         )}
         <Stack.Screen 
-          name="(tabs)/player" 
-          options={{ 
-            headerShown: false,
-            presentation: 'fullScreenModal',
-            animation: 'slide_from_bottom',
-          }} 
-        />
-        <Stack.Screen 
-          name="(tabs)/upload" 
+          name="player" 
           options={{ 
             headerShown: false,
             presentation: 'modal',
           }} 
         />
         <Stack.Screen 
-          name="(tabs)/categories" 
+          name="categories" 
           options={{ 
             headerShown: false,
             presentation: 'modal',

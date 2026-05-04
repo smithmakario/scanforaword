@@ -37,10 +37,15 @@ export default function CreatorDashboard() {
         api.get('/creator/stats'),
         api.get('/creator/messages'),
       ]);
-      setStats(statsRes.data.data);
-      setMessages(messagesRes.data.data || []);
-    } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      if (statsRes.data?.status === 'success') {
+        setStats(statsRes.data.data);
+      }
+      setMessages(messagesRes.data?.data || []);
+    } catch (error: any) {
+      console.error('Failed to load dashboard:', error?.response?.data || error.message);
+      if (error?.response?.status === 403) {
+        router.push('/');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -73,15 +78,15 @@ export default function CreatorDashboard() {
           <>
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats?.uploads || 0}</Text>
+                <Text style={styles.statValue}>{typeof stats?.uploads === 'object' ? stats?.uploads?.value : (stats?.uploads || 0)}</Text>
                 <Text style={styles.statLabel}>Uploads</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats?.listens || 0}</Text>
+                <Text style={styles.statValue}>{typeof stats?.listens === 'object' ? stats?.listens?.value : (stats?.listens || 0)}</Text>
                 <Text style={styles.statLabel}>Listens</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats?.keyword_matches || 0}</Text>
+                <Text style={styles.statValue}>{typeof stats?.keyword_matches === 'object' ? stats?.keyword_matches?.value : (stats?.keyword_matches || 0)}</Text>
                 <Text style={styles.statLabel}>Keywords</Text>
               </View>
             </View>
@@ -90,11 +95,11 @@ export default function CreatorDashboard() {
               <Text style={styles.insightsTitle}>📈 Insights</Text>
               <View style={styles.insightRow}>
                 <Text style={styles.insightLabel}>Peak Time:</Text>
-                <Text style={styles.insightValue}>{stats?.peak_time || 'N/A'}</Text>
+                <Text style={styles.insightValue}>{typeof stats?.peak_time === 'object' ? stats?.peak_time?.value : (stats?.peak_time || 'N/A')}</Text>
               </View>
               <View style={styles.insightRow}>
                 <Text style={styles.insightLabel}>Engagement:</Text>
-                <Text style={styles.insightValue}>{stats?.engagement || 'N/A'}</Text>
+                <Text style={styles.insightValue}>{typeof stats?.engagement === 'object' ? stats?.engagement?.value : (stats?.engagement || 'N/A')}</Text>
               </View>
             </View>
 

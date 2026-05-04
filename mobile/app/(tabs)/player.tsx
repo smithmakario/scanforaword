@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/store/authStore';
-import api from '../../src/services/api';
+
+const { width } = Dimensions.get('window');
 
 interface MessageDetail {
   id: number;
@@ -30,62 +33,48 @@ export default function PlayerScreen() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [totalDuration, setTotalDuration] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [totalDuration, setTotalDuration] = useState(180);
   const [isBookmarked, setIsBookmarked] = useState(false);
   
-  const progressRef = useRef<View>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleBookmark = async () => {
     if (!isAuthenticated) return;
-    
-    try {
-      await api.post(`/snippets/${id}/bookmark`);
-      setIsBookmarked(!isBookmarked);
-    } catch (error) {
-      console.error('Bookmark error:', error);
-    }
+    setIsBookmarked(!isBookmarked);
   };
 
   useEffect(() => {
-    loadAudio();
+    setTimeout(() => setIsLoading(false), 500);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
-
-  const loadAudio = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Simulate audio loading - in real app, fetch audio_url from API
-      // For now, simulate a 3-minute audio
-      setTotalDuration(180);
-      setIsLoading(false);
-      setIsPlaying(true);
-    } catch (err) {
-      setError('Unable to load this message. Please try again.');
-      setIsLoading(false);
-    }
-  };
 
   const togglePlayPause = () => {
     if (isPlaying) {
-      setIsPlaying(false);
-      setIsPaused(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     } else {
-      setIsPlaying(true);
-      setIsPaused(false);
+      intervalRef.current = setInterval(() => {
+        setCurrentTime(prev => {
+          if (prev >= totalDuration) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
     }
+    setIsPlaying(!isPlaying);
   };
 
   const skipForward = () => {
-    const newTime = Math.min(currentTime + 5, totalDuration);
+    const newTime = Math.min(currentTime + 10, totalDuration);
     setCurrentTime(newTime);
   };
 
   const skipBackward = () => {
-    const newTime = Math.max(currentTime - 5, 0);
+    const newTime = Math.max(currentTime - 10, 0);
     setCurrentTime(newTime);
   };
 
@@ -97,283 +86,215 @@ export default function PlayerScreen() {
 
   const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
-  // Simulate playback progress
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying && !isPaused) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= totalDuration) {
-            setIsPlaying(false);
-            return totalDuration;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, isPaused, totalDuration]);
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading audio...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Text style={styles.closeText}>✕</Text>
-        </TouchableOpacity>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadAudio}>
-            <Text style={styles.retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleClose = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    router.back();
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Text style={styles.closeText}>✕</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      
+      {/* Close Button */}
+      <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+        <Text style={styles.closeText}>✕</Text>
+      </TouchableOpacity>
+
+      {/* Album Art Placeholder */}
+      <View style={styles.albumContainer}>
+        <View style={styles.albumArt}>
+          <Text style={styles.crossIcon}>✝️</Text>
+        </View>
+      </View>
+
+      {/* Title & Speaker */}
+      <View style={styles.infoContainer}>
+        <Text style={styles.title} numberOfLines={2}>
+          {title || 'The Power of Faith'}
+        </Text>
+        <Text style={styles.speaker}>
+          {speaker || 'Pastor John Smith'}
+        </Text>
+      </View>
+
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progress}%` }]} />
+        </View>
+        <View style={styles.timeContainer}>
+          <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+          <Text style={styles.timeText}>{formatTime(totalDuration)}</Text>
+        </View>
+      </View>
+
+      {/* Playback Controls */}
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity style={styles.controlButton} onPress={skipBackward}>
+          <Text style={styles.controlIcon}>⏪</Text>
         </TouchableOpacity>
-        {isAuthenticated && (
-          <TouchableOpacity style={styles.bookmarkBtn} onPress={toggleBookmark}>
-            <Text style={styles.bookmarkBtnText}>
-              {isBookmarked ? '❤️' : '🤍'}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.coverContainer}>
-          <View style={styles.coverImage}>
-            <Text style={styles.coverEmoji}>🎵</Text>
-          </View>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.title}>{title || 'Audio Message'}</Text>
-          <Text style={styles.speaker}>{speaker ? `By ${speaker}` : 'Unknown Speaker'}</Text>
-          {keyword && (
-            <View style={styles.keywordBadge}>
-              <Text style={styles.keywordText}>#{keyword}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View 
-            style={[styles.progressBar, { width: `${progress}%` }]} 
-            ref={progressRef}
-          />
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
-            <Text style={styles.timeText}>{formatTime(totalDuration)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.controlsContainer}>
-          <TouchableOpacity style={styles.skipButton} onPress={skipBackward}>
-            <Text style={styles.skipIcon}>⏪</Text>
-            <Text style={styles.skipLabel}>5s</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
+        
+        <TouchableOpacity 
+          style={[styles.playButton, isPlaying && styles.playButtonActive]} 
+          onPress={togglePlayPause}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#1a1a2e" />
+          ) : (
             <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.skipButton} onPress={skipForward}>
-            <Text style={styles.skipIcon}>⏩</Text>
-            <Text style={styles.skipLabel}>5s</Text>
-          </TouchableOpacity>
-        </View>
+          )}
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.controlButton} onPress={skipForward}>
+          <Text style={styles.controlIcon}>⏩</Text>
+        </TouchableOpacity>
       </View>
-    </SafeAreaView>
+
+      {/* Bookmark Button */}
+      <TouchableOpacity style={styles.bookmarkButton} onPress={toggleBookmark}>
+        <Text style={[styles.bookmarkIcon, isBookmarked && styles.bookmarkActive]}>
+          {isBookmarked ? '🔖' : '🔖'}
+        </Text>
+        <Text style={styles.bookmarkText}>
+          {isBookmarked ? 'Saved' : 'Save'}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#4A154B',
+    paddingTop: 60,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
   },
   closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  bookmarkBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookmarkBtnText: {
-    fontSize: 20,
   },
   closeText: {
+    color: '#fff',
     fontSize: 20,
-    color: Colors.textSecondary,
   },
-  content: {
-    flex: 1,
-    padding: Spacing.lg,
-    justifyContent: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  albumContainer: {
     alignItems: 'center',
+    marginTop: 20,
   },
-  loadingText: {
-    marginTop: Spacing.md,
-    fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-  },
-  errorContainer: {
-    flex: 1,
+  albumArt: {
+    width: width - 80,
+    height: width - 80,
+    backgroundColor: '#6B2D6B',
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.lg,
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: Spacing.md,
-  },
-  errorText: {
-    fontSize: FontSizes.md,
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-  },
-  retryButton: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 12,
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontSize: FontSizes.md,
-    fontWeight: '600',
-  },
-  coverContainer: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  coverImage: {
-    width: 250,
-    height: 250,
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  coverEmoji: {
+  crossIcon: {
     fontSize: 80,
   },
   infoContainer: {
+    marginTop: 30,
     alignItems: 'center',
-    marginBottom: Spacing.xl,
   },
   title: {
     fontSize: FontSizes.xl,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
   },
   speaker: {
     fontSize: FontSizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
-  },
-  keywordBadge: {
-    backgroundColor: Colors.accent,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: 20,
-  },
-  keywordText: {
-    fontSize: FontSizes.sm,
-    color: Colors.text,
-    fontWeight: '600',
+    color: '#888',
   },
   progressContainer: {
-    marginBottom: Spacing.xl,
+    marginTop: 30,
   },
   progressBar: {
-    height: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
   },
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: Spacing.xs,
+    marginTop: 8,
   },
   timeText: {
-    fontSize: FontSizes.sm,
-    color: Colors.textMuted,
+    color: '#888',
+    fontSize: FontSizes.xs,
   },
   controlsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: Spacing.xl,
+    marginTop: 40,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 30,
+    paddingVertical: 20,
+    paddingHorizontal: 40,
   },
-  skipButton: {
+  controlButton: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.sm,
   },
-  skipIcon: {
-    fontSize: 28,
-  },
-  skipLabel: {
-    fontSize: FontSizes.xs,
-    color: Colors.textMuted,
-    marginTop: 2,
+  controlIcon: {
+    fontSize: 32,
+    color: '#fff',
   },
   playButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  playButtonActive: {
+    backgroundColor: '#e0e0e0',
   },
   playIcon: {
-    fontSize: 36,
-    color: '#FFFFFF',
+    fontSize: 32,
+    color: '#4A154B',
+  },
+  bookmarkButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  bookmarkIcon: {
+    fontSize: 20,
+    marginRight: 8,
+    opacity: 0.6,
+  },
+  bookmarkActive: {
+    opacity: 1,
+  },
+  bookmarkText: {
+    color: '#888',
+    fontSize: FontSizes.sm,
   },
 });

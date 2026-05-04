@@ -9,36 +9,42 @@ class CreatorController extends Controller
 {
     public function getStats(Request $request)
     {
-        // For the demo, we use aggregated data
+        $user = $request->user();
+        
+        if ($user->role !== 'creator') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Access denied. Creator role required.'
+            ], 403);
+        }
+
         $totalUploads = \App\Models\Message::count();
-        $totalListens = \App\Models\Message::sum('listens_count');
-        $keywordMatches = \App\Models\SearchLog::count(); // Simplified metric
+        $totalListens = \App\Models\Message::sum('listens_count') ?? 0;
+        $keywordMatches = \App\Models\SearchLog::count();
 
         return response()->json([
             'status' => 'success',
             'data' => [
-                'total_uploads' => [
-                    'value' => $totalUploads,
-                    'growth' => '+12%'
-                ],
-                'total_listens' => [
-                    'value' => number_format($totalListens / 1000, 1) . 'k',
-                    'growth' => '+24%'
-                ],
-                'keyword_matches' => [
-                    'value' => $keywordMatches,
-                    'growth' => '+8%'
-                ],
-                'insights' => [
-                    'peak_time' => '5 AM - 7 AM',
-                    'engagement_score' => 75
-                ]
+                'uploads' => $totalUploads,
+                'listens' => $totalListens,
+                'keyword_matches' => $keywordMatches,
+                'peak_time' => '5 AM - 7 AM',
+                'engagement' => 75
             ]
         ]);
     }
 
     public function getRecentUploads(Request $request)
     {
+        $user = $request->user();
+        
+        if ($user->role !== 'creator') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Access denied. Creator role required.'
+            ], 403);
+        }
+        
         $messages = \App\Models\Message::latest()->take(5)->get();
 
         return response()->json([
@@ -49,6 +55,15 @@ class CreatorController extends Controller
 
     public function uploadMessage(Request $request)
     {
+        $user = $request->user();
+        
+        if ($user->role !== 'creator') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Access denied. Creator role required.'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -62,7 +77,7 @@ class CreatorController extends Controller
             'description' => $validated['description'] ?? null,
             'speaker' => $validated['speaker'] ?? 'Apostle Segun Obadje',
             'full_url' => $validated['full_url'] ?? null,
-            'status' => 'processing', // As shown in UI
+            'status' => 'processing',
             'duration' => $validated['duration'] ?? null,
         ]);
 

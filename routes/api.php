@@ -27,7 +27,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Creator Routes
-        Route::prefix('creator')->middleware('role:creator')->group(function () {
+        Route::prefix('creator')->group(function () {
             Route::get('/stats', [CreatorController::class, 'getStats']);
             Route::get('/messages', [CreatorController::class, 'getRecentUploads']);
             Route::post('/upload', [CreatorController::class, 'uploadMessage']);

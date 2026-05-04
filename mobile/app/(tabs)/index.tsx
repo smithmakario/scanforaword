@@ -107,8 +107,12 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hello, {user?.name || 'User'}!</Text>
-          <Text style={styles.subtitle}>Here's your daily inspiration</Text>
+          <View>
+            <Text style={styles.dateText}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </Text>
+            <Text style={styles.greeting}>Hello, {user?.name || 'Beloved'}!</Text>
+          </View>
         </View>
 
         {/* Daily Word Card */}
@@ -116,23 +120,22 @@ export default function HomeScreen() {
           style={styles.dailyWordCard}
           onPress={handleDailyWordPress}
         >
-          <View style={styles.dailyHeader}>
-            <Text style={styles.dailyLabel}>📅 Today's Word</Text>
-            <TouchableOpacity onPress={handleCategoryPress}>
-              <Text style={styles.settingsLink}>⚙️</Text>
-            </TouchableOpacity>
+          <View style={styles.crossWatermark}>
+            <Text style={styles.crossWatermarkText}>✝</Text>
           </View>
-          <Text style={styles.dailyTitle}>{dailyWord?.title || 'Daily Inspiration'}</Text>
-          <Text style={styles.dailyDesc} numberOfLines={2}>
-            {dailyWord?.content || 'Tap to listen to today\'s inspiring message...'}
+          
+          <Text style={styles.dailyLabel}>📅 Today's Word</Text>
+          
+          <Text style={styles.dailyTitle}>
+            {dailyWord?.title || 'Receive Your Daily Word'}
           </Text>
-          {dailyWord?.keyword && (
-            <View style={styles.keywordBadge}>
-              <Text style={styles.keywordText}>#{dailyWord.keyword}</Text>
-            </View>
-          )}
-          <View style={styles.playHint}>
-            <Text style={styles.playHintText}>▶ Tap to play</Text>
+          
+          <Text style={styles.dailySpeaker}>
+            {dailyWord?.speaker || 'Tap to listen now'}
+          </Text>
+          
+          <View style={styles.playButtonContainer}>
+            <Text style={styles.playButtonBig}>▶</Text>
           </View>
         </TouchableOpacity>
 
@@ -224,59 +227,95 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
-  dailyWordCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    padding: Spacing.lg,
+dailyWordCard: {
+    backgroundColor: '#4A154B',
+    borderRadius: 24,
+    padding: Spacing.xl,
     marginBottom: Spacing.lg,
-  },
-  dailyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderTopWidth: 4,
+    borderTopColor: '#4A154B',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    position: 'relative',
   },
   dailyLabel: {
-    color: Colors.accent,
-    fontSize: FontSizes.sm,
+    color: '#FFD700',
+    fontSize: FontSizes.xs,
     fontWeight: '600',
-  },
-  settingsLink: {
-    fontSize: 20,
+    letterSpacing: 1,
+    alignSelf: 'flex-start',
   },
   dailyTitle: {
     color: '#FFFFFF',
-    fontSize: FontSizes.lg,
+    fontSize: FontSizes.xl,
     fontWeight: 'bold',
-    marginBottom: Spacing.xs,
+    marginTop: Spacing.sm,
+    textAlign: 'center',
   },
-  dailyDesc: {
+  dailySpeaker: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: FontSizes.sm,
-    marginBottom: Spacing.sm,
+    marginTop: Spacing.xs,
   },
-  keywordBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: Spacing.sm,
-  },
-  keywordText: {
-    color: Colors.accent,
+  dailyLabel: {
+    color: '#FFFFFF',
     fontSize: FontSizes.xs,
     fontWeight: '600',
+    letterSpacing: 1,
+    alignSelf: 'flex-start',
   },
-  playHint: {
+  dailyTitle: {
+    color: '#FFFFFF',
+    fontSize: FontSizes.xl,
+    fontWeight: 'bold',
+    marginTop: Spacing.sm,
+    textAlign: 'center',
+  },
+  dailySpeaker: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: FontSizes.sm,
+    marginTop: Spacing.xs,
+  },
+  dailyDesc: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: FontSizes.sm,
+    textAlign: 'center',
     marginTop: Spacing.sm,
   },
-  playHintText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: FontSizes.xs,
+playButtonContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFD700',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  playButtonBig: {
+    fontSize: 36,
+    color: '#4A154B',
+    marginLeft: 4,
+  },
+  playButtonBig: {
+    fontSize: 36,
+    color: '#4A154B',
+    marginLeft: 4,
   },
   section: {
-    marginBottom: Spacing.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  readButtonText: {
+    color: '#4A154B',
+    fontSize: FontSizes.md,
+    fontWeight: '600',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -287,11 +326,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FontSizes.lg,
     fontWeight: '600',
-    color: Colors.text,
+    color: '#1A1A1A',
   },
   seeAllText: {
     fontSize: FontSizes.sm,
-    color: Colors.primary,
+    color: '#4A154B',
   },
   categoriesList: {
     flexDirection: 'row',
@@ -299,28 +338,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   categoryChip: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#E8E8E8',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: '#CCCCCC',
   },
   categoryText: {
-    color: Colors.primary,
-    fontSize: FontSizes.sm,
-  },
-  addCategoryButton: {
-    backgroundColor: Colors.inputBg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
-  },
-  addCategoryText: {
-    color: Colors.textMuted,
+    color: '#1A1A1A',
     fontSize: FontSizes.sm,
   },
   trendingList: {
@@ -329,15 +355,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   trendingItem: {
-    backgroundColor: Colors.surface,
+    backgroundColor: '#E8E8E8',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#CCCCCC',
   },
   trendingText: {
-    color: Colors.primary,
+    color: '#1A1A1A',
     fontSize: FontSizes.sm,
     fontWeight: '500',
   },

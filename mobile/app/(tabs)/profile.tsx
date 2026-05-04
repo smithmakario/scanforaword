@@ -27,6 +27,14 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleCreatorDashboard = () => {
+    router.push('/creator');
+  };
+
+  const handleUpload = () => {
+    router.push('/upload');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -46,46 +54,59 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>⚙️ Settings</Text>
           
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Edit Profile</Text>
+            <Text style={styles.menuText}>👤 Edit Profile</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Notification Settings</Text>
+            <Text style={styles.menuText}>🔔 Notification Settings</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Privacy Policy</Text>
+            <Text style={styles.menuText}>🔒 Privacy Policy</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText}>Terms of Service</Text>
+            <Text style={styles.menuText}>📜 Terms of Service</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
         </View>
 
         {user?.role === 'creator' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Creator</Text>
+            <Text style={styles.sectionTitle}>🎤 Creator Studio</Text>
             
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Creator Dashboard</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={handleCreatorDashboard}>
+              <Text style={styles.menuText}>📊 Creator Dashboard</Text>
+              <Text style={styles.menuArrow}>›</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.menuItem} onPress={handleUpload}>
+              <Text style={styles.menuText}>📤 Upload Content</Text>
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Upload Content</Text>
+              <Text style={styles.menuText}>📈 Analytics</Text>
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Analytics</Text>
-              <Text style={styles.menuArrow}>›</Text>
+          </View>
+        )}
+
+        {/* For listeners who want to become creators */}
+        {user?.role !== 'creator' && (
+          <View style={styles.sectionCreator}>
+            <Text style={styles.creatorTitle}>🎤 Become a Creator</Text>
+            <Text style={styles.creatorDesc}>
+              Share your messages and build your audience
+            </Text>
+            <TouchableOpacity style={styles.creatorButton}>
+              <Text style={styles.creatorButtonText}>Apply as Creator</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -179,14 +200,45 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   logoutButton: {
-    backgroundColor: Colors.error,
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: Spacing.md,
     alignItems: 'center',
     marginTop: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.error,
   },
   logoutText: {
+    color: Colors.error,
+    fontSize: FontSizes.md,
+    fontWeight: '600',
+  },
+  sectionCreator: {
+    backgroundColor: '#4A154B',
+    borderRadius: 16,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+  },
+  creatorTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: 'bold',
     color: '#FFFFFF',
+    marginBottom: Spacing.xs,
+  },
+  creatorDesc: {
+    fontSize: FontSizes.sm,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: Spacing.md,
+  },
+  creatorButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+  },
+  creatorButtonText: {
+    color: '#4A154B',
     fontSize: FontSizes.md,
     fontWeight: '600',
   },
