@@ -28,6 +28,7 @@ export default function UploadScreen() {
   const [description, setDescription] = useState('');
   const [speaker, setSpeaker] = useState('');
   const [keywords, setKeywords] = useState('');
+  const [content, setContent] = useState('');
   const [audioFile, setAudioFile] = useState<any>(null);
   const [coverImage, setCoverImage] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -119,6 +120,7 @@ export default function UploadScreen() {
         description: description.trim(),
         speaker: speaker.trim(),
         keywords: keywords.trim(),
+        content: content.trim(),
       };
 
       if (audioFile?.uri) {
@@ -281,6 +283,21 @@ export default function UploadScreen() {
                 placeholderTextColor={Colors.textMuted}
                 value={keywords}
                 onChangeText={setKeywords}
+              />
+            </View>
+
+            {/* Content/Note */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Content / Note</Text>
+              <Text style={styles.inputHint}>Write the full message or note (optional)</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Type your message content here..."
+                placeholderTextColor={Colors.textMuted}
+                value={content}
+                onChangeText={setContent}
+                multiline
+                numberOfLines={6}
               />
             </View>
 

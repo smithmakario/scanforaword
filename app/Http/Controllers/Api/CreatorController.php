@@ -73,6 +73,7 @@ class CreatorController extends Controller
             'audio_base64' => 'nullable|string',
             'image_base64' => 'nullable|string',
             'keywords' => 'required|string',
+            'content' => 'nullable|string',
         ]);
 
         $audioPath = null;
@@ -97,6 +98,7 @@ class CreatorController extends Controller
         $message = \App\Models\Message::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'content' => $validated['content'] ?? null,
             'speaker' => $validated['speaker'] ?? $user->name,
             'full_url' => $audioPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($audioPath) : ($validated['full_url'] ?? null),
             'status' => 'processing',

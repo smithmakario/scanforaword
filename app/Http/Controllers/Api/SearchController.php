@@ -17,7 +17,18 @@ class SearchController extends Controller
         $identifier = $request->identifier;
         $keywordName = strtolower($request->keyword);
 
-        // Find the keyword or search content
+        // Search in both Messages and Snippets
+        $messages = \App\Models\Message::where('status', 'published')
+            ->where(function($query) use ($keywordName) {
+                $query->where('title', 'LIKE', "%$keywordName%")
+                    ->orWhere('content', 'LIKE', "%$keywordName%")
+                    ->orWhereHas('keywords', function($q) use ($keywordName) {
+                        $q->where('name', $keywordName);
+                    });
+            })
+            ->get();
+
+        // Also search in snippets
         $snippets = \App\Models\Snippet::where('title', 'LIKE', "%$keywordName%")
             ->orWhere('content', 'LIKE', "%$keywordName%")
             ->orWhereHas('keywords', function($query) use ($keywordName) {
@@ -30,8 +41,24 @@ class SearchController extends Controller
         \App\Models\SearchLog::create([
             'email_or_phone' => $identifier,
             'keyword' => $keywordName,
-            'result_count' => count($snippets),
+            'result_count' => count($messages) + count($snippets),
         ]);
+
+        // Transform messages to include in results
+        $messageResults = $messages->map(function($msg) {
+            return [
+                'id' => $msg->id,
+                'title' => $msg->title,
+                'content' => $msg->content,
+                'keyword' => $msg->keywords->pluck('name')->implode(', '),
+                'speaker' => $msg->speaker,
+                'duration' => $msg->duration,
+                'full_url' => $msg->full_url,
+            ];
+        });
+
+        // Combine and return
+        $allResults = $messageResults->concat($snippets);
 
         return response()->json([
             'status' => 'success',
@@ -39,8 +66,8 @@ class SearchController extends Controller
                 'identifier' => $identifier,
                 'keyword' => $keywordName,
             ],
-            'results_count' => count($snippets),
-            'data' => $snippets,
+            'results_count' => $allResults->count(),
+            'data' => $allResults,
         ]);
     }
 

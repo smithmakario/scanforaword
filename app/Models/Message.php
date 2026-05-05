@@ -14,6 +14,7 @@ class Message extends Model
         'status',
         'listens_count',
         'duration',
+        'content',
     ];
 
     public function snippets()
