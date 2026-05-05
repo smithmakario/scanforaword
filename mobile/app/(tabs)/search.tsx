@@ -181,16 +181,25 @@ export default function SearchScreen() {
       const searchResults = response.data.data || [];
       let mapped: SearchResult[] = [];
       if (Array.isArray(searchResults)) {
-        mapped = searchResults.map((item: any) => ({
-          id: typeof item.id === 'number' ? item.id : Number(item.id || 0),
-          title: String(item.title || item.name || ''),
-          content: String(item.content || ''),
-          keyword: String(item.keyword || item.name || ''),
-          speaker: String(item.speaker || ''),
-          duration: String(item.duration || ''),
-          full_url: String(item.full_url || ''),
-          is_bookmarked: Boolean(item.is_bookmarked),
-        }));
+        mapped = searchResults.map((item: any) => {
+          const safeId = item?.id ?? item?.ID ?? 0;
+          const safeTitle = item?.title ?? item?.name ?? item?.Title ?? '';
+          const safeContent = item?.content ?? item?.Content ?? item?.note ?? '';
+          const safeKeyword = item?.keyword ?? item?.name ?? item?.Keyword ?? '';
+          const safeSpeaker = item?.speaker ?? item?.Speaker ?? '';
+          const safeDuration = item?.duration ?? item?.Duration ?? '';
+          const safeUrl = item?.full_url ?? item?.url ?? item?.audio_url ?? '';
+          return {
+            id: typeof safeId === 'number' ? safeId : Number(safeId) || 0,
+            title: typeof safeTitle === 'string' ? safeTitle : '',
+            content: typeof safeContent === 'string' ? safeContent : '',
+            keyword: typeof safeKeyword === 'string' ? safeKeyword : '',
+            speaker: typeof safeSpeaker === 'string' ? safeSpeaker : '',
+            duration: typeof safeDuration === 'string' ? safeDuration : '',
+            full_url: typeof safeUrl === 'string' ? safeUrl : '',
+            is_bookmarked: Boolean(item?.is_bookmarked),
+          };
+        });
       }
       setResults(mapped);
     } catch (error) {
