@@ -20,4 +20,9 @@ class Message extends Model
     {
         return $this->hasMany(Snippet::class);
     }
+
+    public function keywords()
+    {
+        return $this->belongsToMany(Keyword::class);
+    }
 }

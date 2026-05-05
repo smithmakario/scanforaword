@@ -72,6 +72,7 @@ class CreatorController extends Controller
             'duration' => 'nullable|string',
             'audio_base64' => 'nullable|string',
             'image_base64' => 'nullable|string',
+            'keywords' => 'required|string',
         ]);
 
         $audioPath = null;
@@ -101,6 +102,15 @@ class CreatorController extends Controller
             'status' => 'processing',
             'duration' => $validated['duration'] ?? null,
         ]);
+
+        // Handle keywords
+        $keywordNames = array_map('trim', explode(',', $validated['keywords']));
+        foreach ($keywordNames as $keywordName) {
+            if (!empty($keywordName)) {
+                $keyword = \App\Models\Keyword::firstOrCreate(['name' => strtolower($keywordName)]);
+                $message->keywords()->attach($keyword->id);
+            }
+        }
 
         return response()->json([
             'status' => 'success',

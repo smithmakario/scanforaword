@@ -27,6 +27,7 @@ export default function UploadScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [speaker, setSpeaker] = useState('');
+  const [keywords, setKeywords] = useState('');
   const [audioFile, setAudioFile] = useState<any>(null);
   const [coverImage, setCoverImage] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -42,6 +43,10 @@ export default function UploadScreen() {
 
     if (!speaker.trim()) {
       newErrors.speaker = 'Speaker name is required';
+    }
+
+    if (!keywords.trim()) {
+      newErrors.keywords = 'At least one keyword is required';
     }
 
     if (!audioFile) {
@@ -113,6 +118,7 @@ export default function UploadScreen() {
         title: title.trim(),
         description: description.trim(),
         speaker: speaker.trim(),
+        keywords: keywords.trim(),
       };
 
       if (audioFile?.uri) {
@@ -265,6 +271,19 @@ export default function UploadScreen() {
               />
             </View>
 
+            {/* Keywords */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Keywords *</Text>
+              <Text style={styles.inputHint}>Enter keywords separated by commas (e.g., faith, hope, love)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="faith, hope, peace, love..."
+                placeholderTextColor={Colors.textMuted}
+                value={keywords}
+                onChangeText={setKeywords}
+              />
+            </View>
+
             {/* Cover Image */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Cover Image (Optional)</Text>
@@ -352,6 +371,11 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: Colors.error,
+  },
+  inputHint: {
+    fontSize: FontSizes.xs,
+    color: Colors.textMuted,
+    marginBottom: Spacing.xs,
   },
   textArea: {
     height: 100,
