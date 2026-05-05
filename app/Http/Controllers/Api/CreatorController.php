@@ -101,7 +101,7 @@ class CreatorController extends Controller
             'content' => $validated['content'] ?? null,
             'speaker' => $validated['speaker'] ?? $user->name,
             'full_url' => $audioPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($audioPath) : ($validated['full_url'] ?? null),
-            'status' => 'processing',
+            'status' => 'published', // Auto-publish for now
             'duration' => $validated['duration'] ?? null,
         ]);
 
@@ -116,7 +116,7 @@ class CreatorController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Message uploaded and processing',
+            'message' => 'Message uploaded successfully',
             'data' => $message
         ]);
     }

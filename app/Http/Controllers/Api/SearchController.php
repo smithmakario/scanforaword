@@ -17,16 +17,15 @@ class SearchController extends Controller
         $identifier = $request->identifier;
         $keywordName = strtolower($request->keyword);
 
-        // Search in both Messages and Snippets
-        $messages = \App\Models\Message::where('status', 'published')
-            ->where(function($query) use ($keywordName) {
-                $query->where('title', 'LIKE', "%$keywordName%")
-                    ->orWhere('content', 'LIKE', "%$keywordName%")
-                    ->orWhereHas('keywords', function($q) use ($keywordName) {
-                        $q->where('name', $keywordName);
-                    });
-            })
-            ->get();
+        // Search in Messages (all status for now)
+        $messages = \App\Models\Message::where(function($query) use ($keywordName) {
+            $query->where('title', 'LIKE', "%$keywordName%")
+                ->orWhere('content', 'LIKE', "%$keywordName%")
+                ->orWhereHas('keywords', function($q) use ($keywordName) {
+                    $q->where('name', $keywordName);
+                });
+        })
+        ->get();
 
         // Also search in snippets
         $snippets = \App\Models\Snippet::where('title', 'LIKE', "%$keywordName%")
