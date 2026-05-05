@@ -54,18 +54,18 @@ export default function UploadScreen() {
 
   const handleSelectAudio = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [DocumentPicker.audio],
-      });
-      if (result) {
+      const result = await DocumentPicker.getDocumentAsync({});
+      if (result && result.assets && result.assets[0]) {
+        const asset = result.assets[0];
         setAudioFile({
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
-          size: result.assets[0].size,
+          uri: asset.uri,
+          name: asset.name,
+          size: asset.size,
         });
       }
     } catch (error) {
       console.error('Error picking audio:', error);
+      Alert.alert('Error', 'Could not pick audio file');
     }
   };
 
@@ -74,10 +74,9 @@ export default function UploadScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
-        aspect: [1, 1],
         quality: 0.8,
       });
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets && result.assets[0]) {
         setCoverImage({
           uri: result.assets[0].uri,
           name: result.assets[0].fileName || 'cover.jpg',
@@ -85,6 +84,7 @@ export default function UploadScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
+      Alert.alert('Error', 'Could not pick image');
     }
   };
 
@@ -218,6 +218,7 @@ export default function UploadScreen() {
                     <Text style={styles.selectIcon}>🎤</Text>
                     <Text style={styles.selectText}>Tap to select audio file</Text>
                     <Text style={styles.selectHint}>MP3, M4A, WAV (max 500 MB)</Text>
+                    <Text style={styles.selectHint}>You can select any file type</Text>
                   </View>
                 )}
               </TouchableOpacity>
