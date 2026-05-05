@@ -77,16 +77,17 @@ class SearchController extends Controller
             ->groupBy('keyword')
             ->orderBy('total', 'desc')
             ->take(5)
-            ->pluck('keyword');
+            ->pluck('keyword')
+            ->toArray();
 
-        // Fallback if no logs
-        if ($trending->isEmpty()) {
-            $trending = ['Peace', 'Resilience', 'Clarity', 'Kindness', 'Gratitude'];
+        // Fallback if no logs or empty
+        if (empty($trending)) {
+            $trending = ['Faith', 'Hope', 'Love', 'Peace', 'Joy'];
         }
 
         return response()->json([
             'status' => 'success',
-            'data' => $trending
+            'data' => array_values($trending)
         ]);
     }
 
