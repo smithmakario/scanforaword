@@ -70,13 +70,34 @@ class CreatorController extends Controller
             'speaker' => 'nullable|string',
             'full_url' => 'nullable|url',
             'duration' => 'nullable|string',
+            'audio_base64' => 'nullable|string',
+            'image_base64' => 'nullable|string',
         ]);
+
+        $audioPath = null;
+        $imagePath = null;
+
+        // Handle audio file upload
+        if (!empty($validated['audio_base64'])) {
+            $audioData = base64_decode($validated['audio_base64']);
+            $audioName = 'audio_' . time() . '.mp3';
+            $audioPath = 'messages/' . $audioName;
+            \Illuminate\Support\Facades\Storage::disk('public')->put($audioPath, $audioData);
+        }
+
+        // Handle image file upload
+        if (!empty($validated['image_base64'])) {
+            $imageData = base64_decode($validated['image_base64']);
+            $imageName = 'image_' . time() . '.jpg';
+            $imagePath = 'messages/' . $imageName;
+            \Illuminate\Support\Facades\Storage::disk('public')->put($imagePath, $imageData);
+        }
 
         $message = \App\Models\Message::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'speaker' => $validated['speaker'] ?? 'Apostle Segun Obadje',
-            'full_url' => $validated['full_url'] ?? null,
+            'speaker' => $validated['speaker'] ?? $user->name,
+            'full_url' => $audioPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($audioPath) : ($validated['full_url'] ?? null),
             'status' => 'processing',
             'duration' => $validated['duration'] ?? null,
         ]);

@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
-import { useAuthStore } from '../../src/store/authStore';
-import api from '../../src/services/api';
+import { Colors, Spacing, FontSizes } from '../src/constants/theme';
+import { useAuthStore } from '../src/store/authStore';
+import api from '../src/services/api';
 
 interface Category {
   id: number;

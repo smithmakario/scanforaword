@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://192.168.18.17:8000/api';
+const BASE_URL = 'https://phplaravel-1549859-6393770.cloudwaysapps.com/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -70,6 +70,17 @@ export const authAPI = {
   resendCode: async () => {
     const response = await api.post('/resend-code');
     return response.data;
+  },
+
+  requestCreator: async () => {
+    try {
+      const response = await api.post('/creator/request');
+      console.log('Creator request response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.log('Creator request error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 };
 

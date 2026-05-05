@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
-import { useAuthStore } from '../../src/store/authStore';
+import { Colors, Spacing, FontSizes } from '../src/constants/theme';
+import { useAuthStore } from '../src/store/authStore';
 
 const { width } = Dimensions.get('window');
 

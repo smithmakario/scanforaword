@@ -57,8 +57,19 @@ export default function HomeScreen() {
 
       // Load trending
       const trendingRes = await api.get('/search/trending');
-      const trendingData = trendingRes.data.data || [];
-      setTrending(trendingData.map((t: any) => t.keyword || t));
+      console.log('Trending API response:', JSON.stringify(trendingRes.data));
+      let mappedTrending: string[] = [];
+      const trendingData = trendingRes.data?.data;
+      if (Array.isArray(trendingData)) {
+        mappedTrending = trendingData
+          .map((t: any) => String(t))
+          .filter((k: string) => k && k !== '[object Object]');
+      }
+      if (mappedTrending.length === 0) {
+        mappedTrending = ['Faith', 'Hope', 'Love', 'Peace', 'Joy'];
+      }
+      console.log('Mapped trending:', mappedTrending);
+      setTrending(mappedTrending);
     } catch (error) {
       console.error('Failed to load home data:', error);
       // Fallback defaults

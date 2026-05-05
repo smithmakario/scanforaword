@@ -25,6 +25,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [AuthController::class, 'profile']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/creator/request', [AuthController::class, 'requestCreator']);
 
         // Creator Routes
         Route::prefix('creator')->group(function () {

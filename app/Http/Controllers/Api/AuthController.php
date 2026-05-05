@@ -100,4 +100,36 @@ class AuthController extends Controller
             'token_type' => 'Bearer'
         ]);
     }
+
+    public function requestCreator(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user->role === 'creator') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You are already a creator'
+            ], 400);
+        }
+        
+        if ($user->creator_request_status === 'pending') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your creator request is already pending'
+            ], 400);
+        }
+        
+        $user->update([
+            'creator_request_status' => 'pending',
+            'creator_requested_at' => now(),
+        ]);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Creator request submitted successfully',
+            'data' => [
+                'creator_request_status' => 'pending',
+            ]
+        ]);
+    }
 }

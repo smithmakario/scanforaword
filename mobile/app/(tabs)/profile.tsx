@@ -1,13 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/store/authStore';
+import { authAPI } from '../../src/services/api';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const [isRequesting, setIsRequesting] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -33,6 +35,44 @@ export default function ProfileScreen() {
 
   const handleUpload = () => {
     router.push('/upload');
+  };
+
+  const handleCreatorRequest = async () => {
+    Alert.alert(
+      'Apply as Creator',
+      'Would you like to apply to become a creator and share your_messages with listeners?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Apply',
+          onPress: async () => {
+            setIsRequesting(true);
+            try {
+              const response = await authAPI.requestCreator();
+              if (response.status === 'success') {
+                Alert.alert(
+                  'Request Submitted!',
+                  'Your creator request is pending. You will be notified once approved.',
+                  [{ text: 'OK' }]
+                );
+              } else {
+                Alert.alert('Error', response.message || 'Failed to submit request');
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to submit request');
+            } finally {
+              setIsRequesting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getCreatorButtonText = () => {
+    if (isRequesting) return 'Submitting...';
+    if (user?.role === 'creator') return 'Creator';
+    return 'Apply as Creator';
   };
 
   return (
@@ -105,8 +145,16 @@ export default function ProfileScreen() {
             <Text style={styles.creatorDesc}>
               Share your messages and build your audience
             </Text>
-            <TouchableOpacity style={styles.creatorButton}>
-              <Text style={styles.creatorButtonText}>Apply as Creator</Text>
+            <TouchableOpacity 
+              style={[styles.creatorButton, isRequesting && styles.creatorButtonDisabled]} 
+              onPress={handleCreatorRequest}
+              disabled={isRequesting}
+            >
+              {isRequesting ? (
+                <ActivityIndicator size="small" color="#4A154B" />
+              ) : (
+                <Text style={styles.creatorButtonText}>{getCreatorButtonText()}</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}

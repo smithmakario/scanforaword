@@ -33,7 +33,7 @@ interface TrendingKeyword {
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [trending, setTrending] = useState<TrendingKeyword[]>([]);
@@ -116,16 +116,20 @@ export default function SearchScreen() {
   const loadTrending = async () => {
     try {
       const response = await api.get('/search/trending');
-      setTrending(response.data.data || []);
+      const trendingData = response.data?.data;
+      let mapped: string[] = [];
+      if (Array.isArray(trendingData)) {
+        mapped = trendingData
+          .map((t: any) => String(t))
+          .filter((k: string) => k && k !== '[object Object]');
+      }
+      if (mapped.length === 0) {
+        mapped = ['Faith', 'Hope', 'Love', 'Peace', 'Joy'];
+      }
+      setTrending(mapped);
     } catch (error) {
       console.error('Failed to load trending:', error);
-      setTrending([
-        { keyword: 'Faith', count: 150 },
-        { keyword: 'Peace', count: 120 },
-        { keyword: 'Love', count: 98 },
-        { keyword: 'Hope', count: 87 },
-        { keyword: 'Joy', count: 75 },
-      ]);
+      setTrending(['Faith', 'Hope', 'Love', 'Peace', 'Joy']);
     } finally {
       setIsLoadingTrending(false);
     }
@@ -169,10 +173,21 @@ export default function SearchScreen() {
     setSearchKeyword(searchTerm);
     
     try {
+      const identifier = user?.email || user?.phone_number || '';
       const response = await api.get('/search', {
-        params: { keyword: searchTerm },
+        params: { keyword: searchTerm, identifier },
       });
-      setResults(response.data.data || []);
+      const searchResults = response.data.data || [];
+      const mapped = searchResults.map((item: any) => ({
+        id: item.id,
+        title: String(item.title || ''),
+        content: String(item.content || ''),
+        keyword: String(item.keyword || ''),
+        speaker: item.speaker ? String(item.speaker) : undefined,
+        duration: item.duration ? String(item.duration) : undefined,
+        is_bookmarked: Boolean(item.is_bookmarked),
+      }));
+      setResults(mapped);
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);

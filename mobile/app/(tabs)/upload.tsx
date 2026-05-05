@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
 import api from '../../src/services/api';
 
@@ -50,21 +52,40 @@ export default function UploadScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSelectAudio = () => {
-    // In a real app, this would use expo-document-picker or expo-image-picker
-    // For now, simulate file selection
-    setAudioFile({
-      name: 'sample_audio.mp3',
-      size: 15000000, // 15MB
-    });
+  const handleSelectAudio = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [DocumentPicker.audio],
+      });
+      if (result) {
+        setAudioFile({
+          uri: result.assets[0].uri,
+          name: result.assets[0].name,
+          size: result.assets[0].size,
+        });
+      }
+    } catch (error) {
+      console.error('Error picking audio:', error);
+    }
   };
 
-  const handleSelectCover = () => {
-    // In a real app, this would use expo-image-picker
-    // For now, simulate image selection
-    setCoverImage({
-      name: 'cover_image.jpg',
-    });
+  const handleSelectCover = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]) {
+        setCoverImage({
+          uri: result.assets[0].uri,
+          name: result.assets[0].fileName || 'cover.jpg',
+        });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+    }
   };
 
   const handleUpload = async () => {
@@ -74,47 +95,56 @@ export default function UploadScreen() {
     setUploadProgress({ percent: 0, status: 'Preparing upload...' });
 
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev && prev.percent < 90) {
-            return { ...prev, percent: prev.percent + 10 };
-          }
-          return prev;
+      // Convert files to base64
+      const fileToBase64 = async (uri: string) => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result as string;
+            resolve(base64.split(',')[1]); // Remove data:image/...;base64, prefix
+          };
+          reader.readAsDataURL(blob);
         });
-      }, 500);
+      };
 
-      // Simulate upload
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      const payload: any = {
+        title: title.trim(),
+        description: description.trim(),
+        speaker: speaker.trim(),
+      };
 
-      clearInterval(progressInterval);
+      if (audioFile?.uri) {
+        const audioBase64 = await fileToBase64(audioFile.uri);
+        payload.audio_base64 = audioBase64;
+      }
 
-      // Make actual API call
-      const formData = new FormData();
-      formData.append('title', title.trim());
-      formData.append('description', description.trim());
-      formData.append('speaker', speaker.trim());
-      formData.append('full_url', 'https://example.com/audio.mp3');
-      formData.append('duration', '3:45');
+      if (coverImage?.uri) {
+        const imageBase64 = await fileToBase64(coverImage.uri);
+        payload.image_base64 = imageBase64;
+      }
 
-      await api.post('/creator/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      console.log('Uploading with payload:', { title: payload.title, hasAudio: !!payload.audio_base64, hasImage: !!payload.image_base64 });
 
-      setUploadProgress({ percent: 100, status: 'Processing...' });
+      const response = await api.post('/creator/upload', payload);
 
-      Alert.alert(
-        'Upload Successful!',
-        'Your message is now being processed. It will become searchable once processing is complete.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      if (response.data?.status === 'success') {
+        setUploadProgress({ percent: 100, status: 'Processing...' });
+
+        Alert.alert(
+          'Upload Successful!',
+          'Your message is now being processed. It will become searchable once processing is complete.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.back(),
+            },
+          ]
+        );
+      } else {
+        throw new Error(response.data?.message || 'Upload failed');
+      }
     } catch (error: any) {
       console.error('Upload error:', error);
       Alert.alert(
