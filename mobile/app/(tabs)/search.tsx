@@ -21,9 +21,10 @@ interface SearchResult {
   title: string;
   content: string;
   keyword: string;
-  speaker?: string;
-  duration?: string;
-  is_bookmarked?: boolean;
+  speaker: string;
+  duration: string;
+  full_url: string;
+  is_bookmarked: boolean;
 }
 
 interface TrendingKeyword {
@@ -178,15 +179,16 @@ export default function SearchScreen() {
         params: { keyword: searchTerm, identifier },
       });
       const searchResults = response.data.data || [];
-      const mapped = searchResults.map((item: any) => ({
-        id: item.id,
-        title: String(item.title || ''),
+      const mapped = (Array.isArray(searchResults) ? searchResults.map((item: any) => ({
+        id: typeof item.id === 'number' ? item.id : Number(item.id || 0),
+        title: String(item.title || item.name || ''),
         content: String(item.content || ''),
-        keyword: String(item.keyword || ''),
-        speaker: item.speaker ? String(item.speaker) : undefined,
-        duration: item.duration ? String(item.duration) : undefined,
+        keyword: String(item.keyword || item.name || ''),
+        speaker: String(item.speaker || ''),
+        duration: String(item.duration || ''),
+        full_url: String(item.full_url || ''),
         is_bookmarked: Boolean(item.is_bookmarked),
-      }));
+      })) : [];
       setResults(mapped);
     } catch (error) {
       console.error('Search error:', error);
