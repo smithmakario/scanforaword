@@ -5,7 +5,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { Colors } from '../src/constants/theme';
 
 export default function RootLayout() {
-  const { isAuthenticated, isVerified, initialize, isLoading, user } = useAuthStore();
+  const { isAuthenticated, isVerified, initialize, isLoading, user, hasLaunchedBefore } = useAuthStore();
 
   useEffect(() => {
     initialize();
@@ -24,7 +24,9 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: Colors.background },
         }}
       >
-        {!isAuthenticated ? (
+        {!hasLaunchedBefore ? (
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        ) : !isAuthenticated ? (
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         ) : !isVerified ? (
           <Stack.Screen name="(auth)/verify" options={{ headerShown: false }} />

@@ -6,6 +6,7 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 15;
 const LOCKOUT_KEY = 'login_lockout';
 const FAILED_ATTEMPTS_KEY = 'failed_attempts';
+const HAS_LAUNCHED_KEY = 'has_launched_before';
 
 interface User {
   id: number;
@@ -21,6 +22,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   isVerified: boolean;
+  hasLaunchedBefore: boolean;
   error: string | null;
   isLocked: boolean;
   lockoutRemainingSeconds: number;
@@ -47,6 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isAuthenticated: false,
   isVerified: false,
+  hasLaunchedBefore: false,
   error: null,
   isLocked: false,
   lockoutRemainingSeconds: 0,
@@ -55,10 +58,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const token = await AsyncStorage.getItem('auth_token');
       const userStr = await AsyncStorage.getItem('auth_user');
+      const hasLaunched = await AsyncStorage.getItem(HAS_LAUNCHED_KEY);
       
       if (token && userStr) {
         const user = JSON.parse(userStr);
-        set({ token, user, isAuthenticated: true, isVerified: true });
+        set({ token, user, isAuthenticated: true, isVerified: true, hasLaunchedBefore: true });
+      } else if (!hasLaunched) {
+        set({ hasLaunchedBefore: false });
+      } else {
+        set({ hasLaunchedBefore: true });
       }
       
       await get().checkLockout();
@@ -105,13 +113,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         await AsyncStorage.setItem('auth_token', access_token);
         await AsyncStorage.setItem('auth_user', JSON.stringify(user));
+        await AsyncStorage.setItem(HAS_LAUNCHED_KEY, 'true');
         
         set({
           token: access_token,
           user,
           isAuthenticated: true,
           isVerified: false,
-          isLoading: false
+          isLoading: false,
+          hasLaunchedBefore: true
         });
         
         return true;
@@ -146,6 +156,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         await AsyncStorage.setItem('auth_token', access_token);
         await AsyncStorage.setItem('auth_user', JSON.stringify(user));
+        await AsyncStorage.setItem(HAS_LAUNCHED_KEY, 'true');
         
         await AsyncStorage.removeItem(FAILED_ATTEMPTS_KEY);
         
@@ -155,7 +166,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
           isVerified: true,
           isLoading: false,
-          error: null
+          error: null,
+          hasLaunchedBefore: true
         });
         
         return true;
