@@ -156,6 +156,13 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.verifyLink}
+              onPress={() => router.push('/(auth)/send-otp')}
+            >
+              <Text style={styles.verifyLinkText}>Resend Verification Code</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={[
                 styles.button,
                 (isLoading || isLocked) && styles.buttonDisabled
