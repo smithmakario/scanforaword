@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify - Scan for a Word</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#D4AF37',
+            onPrimary: '#3c2f00',
+            background: '#131313',
+            surface: '#131313',
+            surfaceContainerHigh: '#2a2a2a',
+            text: '#e5e2e1',
+            textSecondary: '#d0c5af',
+            textMuted: '#99907c',
+            error: '#ffb4ab',
+            border: 'rgba(255, 255, 255, 0.05)',
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      background-color: #131313;
+      color: #e5e2e1;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(30, 30, 30, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .input-glow:focus {
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+    .btn-primary {
+      background-color: #D4AF37;
+      color: #3c2f00;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    }
+    .btn-primary:hover {
+      background-color: #E9C349;
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .otp-input {
+      background-color: #2a2a2a;
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+    .otp-input:focus {
+      border-color: #D4AF37;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+    .otp-input.error {
+      border-color: #ffb4ab;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
+  
+  <!-- Page Container -->
+  <div class="w-full max-w-md">
+    
+    <!-- Logo / Brand -->
+    <div class="text-center mb-8">
+      <p class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">SCAN FOR A WORD</p>
+    </div>
+
+    <!-- Send OTP Section -->
+    <div id="sendOtpSection" class="glass-card rounded-2xl p-8">
+      <!-- Icon -->
+      <div class="flex justify-center mb-6">
+        <div class="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+          <span class="text-4xl">📧</span>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-2xl font-semibold text-center mb-2">Verification</h1>
+      <p class="text-base text-textSecondary text-center mb-8 leading-relaxed">
+        Enter your email address and we'll send you a verification code to confirm your account.
+      </p>
+
+      <!-- Email Input -->
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-text mb-2">Email Address</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-textMuted">✉</span>
+          <input 
+            type="email" 
+            id="emailInput"
+            placeholder="Enter your email"
+            class="w-full bg-surfaceContainerHigh border border-border rounded-xl py-4 pl-12 pr-4 text-text placeholder-textMuted focus:outline-none input-glow"
+          >
+        </div>
+        <p id="emailError" class="text-xs text-error mt-2 hidden">Please enter a valid email address</p>
+      </div>
+
+      <!-- Send Button -->
+      <button 
+        id="sendBtn"
+        class="w-full btn-primary rounded-xl py-4 font-semibold text-base transition-all"
+        onclick="sendCode()"
+      >
+        Send Code
+      </button>
+
+      <!-- Footer -->
+      <div class="text-center mt-6">
+        <span class="text-sm text-textSecondary">Remember your password? </span>
+        <a href="#" class="text-sm text-primary font-semibold" onclick="showLogin()">Sign In</a>
+      </div>
+    </div>
+
+    <!-- Verify OTP Section (Hidden by default) -->
+    <div id="verifyOtpSection" class="glass-card rounded-2xl p-8 hidden">
+      <!-- Icon -->
+      <div class="flex justify-center mb-6">
+        <div class="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center">
+          <span class="text-4xl">🔐</span>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-2xl font-semibold text-center mb-2">Verify Your Email</h1>
+      <p class="text-base text-textSecondary text-center mb-8">
+        We've sent a 6-digit code to your<br>
+        <span id="userEmail" class="text-primary font-semibold">email@example.com</span>
+      </p>
+
+      <!-- OTP Inputs -->
+      <div class="flex justify-center gap-3 mb-6">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 0)" onkeydown="handleBackspace(event, 0)">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleBackspace(event, 1)">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleBackspace(event, 2)">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleBackspace(event, 3)">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleBackspace(event, 4)">
+        <input type="text" class="otp-input w-14 h-16 rounded-xl text-center text-2xl font-bold text-text" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleBackspace(event, 5)">
+      </div>
+
+      <!-- Error Message -->
+      <p id="otpError" class="text-xs text-error text-center mb-4 hidden">Invalid verification code. Please try again.</p>
+
+      <!-- Verify Button -->
+      <button 
+        id="verifyBtn"
+        class="w-full btn-primary rounded-xl py-4 font-semibold text-base transition-all"
+        onclick="verifyCode()"
+      >
+        Verify Code
+      </button>
+
+      <!-- Resend -->
+      <div class="text-center mt-6">
+        <span class="text-sm text-textSecondary">Didn't receive the code? </span>
+        <button class="text-sm text-primary font-semibold" onclick="resendCode()">Resend</button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+      <div class="glass-card rounded-2xl p-8 flex flex-col items-center">
+        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-textSecondary">Please wait...</p>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="glass-card rounded-2xl p-8 text-center hidden">
+      <div class="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center mx-auto mb-6">
+        <span class="text-4xl text-green-500">✓</span>
+      </div>
+      <h2 class="text-2xl font-semibold text-text mb-2">Email Verified!</h2>
+      <p class="text-textSecondary mb-6">Your account has been successfully verified.</p>
+      <button class="btn-primary rounded-xl py-4 px-8 font-semibold" onclick="goToHome()">
+        Go to Home
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const otpInputs = document.querySelectorAll('.otp-input');
+    let currentEmail = '';
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    function sendCode() {
+      const email = document.getElementById('emailInput').value.trim();
+      const errorEl = document.getElementById('emailError');
+      
+      if (!email) {
+        errorEl.textContent = 'Please enter your email address';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        errorEl.textContent = 'Please enter a valid email address';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      currentEmail = email;
+      
+      // Simulate API call
+      showLoading();
+      setTimeout(() => {
+        hideLoading();
+        document.getElementById('sendOtpSection').classList.add('hidden');
+        document.getElementById('verifyOtpSection').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = email;
+        otpInputs[0].focus();
+      }, 1500);
+    }
+
+    function moveToNext(input, index) {
+      const value = input.value;
+      
+      if (value && index < 5) {
+        otpInputs[index + 1].focus();
+      }
+
+      // Auto-verify when all inputs filled
+      const code = Array.from(otpInputs).map(i => i.value).join('');
+      if (code.length === 6) {
+        verifyCode();
+      }
+    }
+
+    function handleBackspace(e, index) {
+      if (e.key === 'Backspace' && !otpInputs[index].value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    }
+
+    function verifyCode() {
+      const code = Array.from(otpInputs).map(i => i.value).join('');
+      const errorEl = document.getElementById('otpError');
+      
+      if (code.length !== 6) {
+        errorEl.textContent = 'Please enter all 6 digits';
+        errorEl.classList.remove('hidden');
+        otpInputs.forEach(input => input.classList.add('error'));
+        return;
+      }
+
+      // Simulate API call - accepts '123456' for testing
+      showLoading();
+      setTimeout(() => {
+        hideLoading();
+        
+        if (code === '123456') {
+          document.getElementById('verifyOtpSection').classList.add('hidden');
+          document.getElementById('successMessage').classList.remove('hidden');
+        } else {
+          errorEl.textContent = 'Invalid verification code. Please try again.';
+          errorEl.classList.remove('hidden');
+          otpInputs.forEach(input => input.classList.add('error'));
+        }
+      }, 1500);
+    }
+
+    function resendCode() {
+      const errorEl = document.getElementById('otpError');
+      errorEl.classList.add('hidden');
+      otpInputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('error');
+      });
+      
+      // Simulate resend
+      showLoading();
+      setTimeout(() => {
+        hideLoading();
+        otpInputs[0].focus();
+      }, 1000);
+    }
+
+    function showLogin() {
+      alert('Redirect to login page');
+    }
+
+    function goToHome() {
+      alert('Redirect to home page');
+    }
+
+    // Allow Enter key to submit
+    document.getElementById('emailInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendCode();
+      }
+    });
+  </script>
+</body>
+</html>
