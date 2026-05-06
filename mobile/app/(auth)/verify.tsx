@@ -9,26 +9,36 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Colors, Spacing, FontSizes, BorderRadius } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { verifyCode, resendCode, isLoading, error, user } = useAuthStore();
-  const email = user?.email || user?.phone_number || '';
+  const params = useLocalSearchParams();
+  const email = params.email as string || '';
   
+  const { verifyCode, resendCode, isLoading, error, clearError } = useAuthStore();
+
   const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [localError, setLocalError] = useState('');
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      setLocalError(error);
+    }
+  }, [error]);
+
   const handleChange = (text: string, index: number) => {
     const newCode = [...code];
-    newCode[index] = text;
+    newCode[index] = text.slice(-1);
     setCode(newCode);
+    setLocalError('');
 
     if (text && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -46,6 +56,9 @@ export default function VerifyScreen() {
   };
 
   const handleVerify = async (fullCode: string) => {
+    setLocalError('');
+    clearError();
+    
     const success = await verifyCode(fullCode);
     if (success) {
       router.replace('/(tabs)');
@@ -53,6 +66,9 @@ export default function VerifyScreen() {
   };
 
   const handleResend = async () => {
+    setLocalError('');
+    clearError();
+    setCode(['', '', '', '', '', '']);
     await resendCode();
   };
 
@@ -64,9 +80,13 @@ export default function VerifyScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Verify Your Account</Text>
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>✉</Text>
+            </View>
+            <Text style={styles.title}>Verify Your Email</Text>
             <Text style={styles.subtitle}>
-              We've sent a 6-digit code to your {email || 'email/phone'}
+              We've sent a 6-digit code to your{'\n'}
+              <Text style={styles.emailHighlight}>{email || 'email'}</Text>
             </Text>
           </View>
 
@@ -75,18 +95,25 @@ export default function VerifyScreen() {
               <TextInput
                 key={index}
                 ref={(ref) => (inputRefs.current[index] = ref)}
-                style={[styles.codeInput, error && styles.codeInputError]}
+                style={[
+                  styles.codeInput,
+                  (localError || error) ? styles.codeInputError : null,
+                ]}
                 value={digit}
-                onChangeText={(text) => handleChange(text.slice(-1), index)}
+                onChangeText={(text) => handleChange(text, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType="number-pad"
                 maxLength={1}
                 selectTextOnFocus
+                placeholderTextColor={Colors.textMuted}
+                placeholder="0"
               />
             ))}
           </View>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {(localError || error) ? (
+            <Text style={styles.errorText}>{localError || error}</Text>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
@@ -100,17 +127,14 @@ export default function VerifyScreen() {
 
           <View style={styles.resendContainer}>
             <Text style={styles.resendText}>Didn't receive the code? </Text>
-            <TouchableOpacity onPress={handleResend}>
+            <TouchableOpacity onPress={handleResend} disabled={isLoading}>
               <Text style={styles.resendLink}>Resend</Text>
             </TouchableOpacity>
           </View>
+        </View>
 
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={() => router.replace('/(tabs)')}
-          >
-            <Text style={styles.skipText}>Skip for now</Text>
-          </TouchableOpacity>
+        <View style={styles.branding}>
+          <Text style={styles.brandText}>SCAN FOR A WORD</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -127,24 +151,48 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  icon: {
+    fontSize: 36,
+    color: Colors.primary,
   },
   title: {
-    fontSize: FontSizes.xl,
-    fontWeight: 'bold',
+    fontSize: FontSizes.headlineMd.fontSize,
+    fontWeight: '600',
     color: Colors.text,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.bodyMd.fontSize,
     color: Colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 24,
+  },
+  emailHighlight: {
+    color: Colors.primary,
+    fontWeight: '600',
   },
   codeContainer: {
     flexDirection: 'row',
@@ -155,58 +203,66 @@ const styles = StyleSheet.create({
   codeInput: {
     width: 50,
     height: 60,
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
     textAlign: 'center',
-    fontSize: FontSizes.xl,
-    fontWeight: 'bold',
+    fontSize: FontSizes.headlineMd.fontSize,
+    fontWeight: '600',
     color: Colors.text,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   codeInputError: {
     borderColor: Colors.error,
   },
   errorText: {
     color: Colors.error,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelSm.fontSize,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
   button: {
     backgroundColor: Colors.primary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: FontSizes.md,
+    color: Colors.onPrimary,
+    fontSize: FontSizes.bodyMd.fontSize,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   resendContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   resendText: {
     color: Colors.textSecondary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
   },
   resendLink: {
     color: Colors.primary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
   },
-  skipButton: {
+  branding: {
     alignItems: 'center',
-    marginTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
-  skipText: {
-    color: Colors.textMuted,
-    fontSize: FontSizes.sm,
+  brandText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primary,
+    letterSpacing: '0.2em',
   },
 });

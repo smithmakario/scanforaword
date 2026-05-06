@@ -39,6 +39,9 @@ interface AuthState {
   logout: () => Promise<void>;
   verifyCode: (code: string) => Promise<boolean>;
   resendCode: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  resetPassword: (email: string, code: string, password: string) => Promise<boolean>;
+  fetchProfile: () => Promise<void>;
   clearError: () => void;
   checkLockout: () => Promise<void>;
 }
@@ -257,6 +260,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to resend code.';
       set({ error: message });
+    }
+  },
+
+  forgotPassword: async (email: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.forgotPassword(email);
+      if (response.status === 'success') {
+        set({ isLoading: false });
+        return true;
+      }
+      set({ isLoading: false, error: response.message || 'Failed to send reset email' });
+      return false;
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to send reset email. Please try again.';
+      set({ error: message, isLoading: false });
+      return false;
+    }
+  },
+
+  resetPassword: async (email: string, code: string, password: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.resetPassword({ email, code, password });
+      if (response.status === 'success') {
+        set({ isLoading: false });
+        return true;
+      }
+      set({ isLoading: false, error: response.message || 'Failed to reset password' });
+      return false;
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to reset password. Please try again.';
+      set({ error: message, isLoading: false });
+      return false;
+    }
+  },
+
+  fetchProfile: async () => {
+    try {
+      const response = await authAPI.getProfile();
+      if (response.status === 'success' && response.data) {
+        await AsyncStorage.setItem('auth_user', JSON.stringify(response.data));
+        set({ user: response.data });
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch profile:', error);
     }
   },
 

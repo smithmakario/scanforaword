@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
+import { Colors, Spacing, FontSizes, BorderRadius } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function LoginScreen() {
@@ -60,13 +60,13 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     clearError();
     setErrors({});
-    
+
     if (!validateForm()) {
       return;
     }
 
     const success = await login(email.trim(), password);
-    
+
     if (success) {
       router.replace('/(tabs)');
     }
@@ -80,7 +80,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
@@ -99,40 +99,43 @@ export default function LoginScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={[
-                  styles.input, 
-                  errors.email && styles.inputError,
-                  isLocked && styles.inputDisabled
-                ]}
-                placeholder="Enter your email"
-                placeholderTextColor={Colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isLocked}
-              />
-              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              <View style={[styles.inputContainer, errors.email ? styles.inputError : null]}>
+                <Text style={styles.inputIcon}>✉</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.textMuted}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLocked}
+                />
+              </View>
+              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[
-                    styles.input, 
-                    styles.passwordInput, 
-                    errors.password && styles.inputError,
-                    isLocked && styles.inputDisabled
-                  ]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={Colors.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  editable={!isLocked}
-                />
+                <View style={[styles.inputContainer, errors.password ? styles.inputError : null]}>
+                  <Text style={styles.inputIcon}>🔒</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor={Colors.textMuted}
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
+                    }}
+                    secureTextEntry={!showPassword}
+                    editable={!isLocked}
+                  />
+                </View>
                 <TouchableOpacity
                   style={styles.showPassword}
                   onPress={() => !isLocked && setShowPassword(!showPassword)}
@@ -142,19 +145,19 @@ export default function LoginScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
             </View>
 
             <TouchableOpacity
               style={styles.forgotPassword}
-              onPress={() => {}}
+              onPress={() => router.push('/(auth)/forgot-password')}
             >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
-                styles.button, 
+                styles.button,
                 (isLoading || isLocked) && styles.buttonDisabled
               ]}
               onPress={handleLogin}
@@ -173,6 +176,10 @@ export default function LoginScreen() {
             </View>
           </View>
         </View>
+
+        <View style={styles.branding}>
+          <Text style={styles.brandText}>SCAN FOR A WORD</Text>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -188,26 +195,26 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     justifyContent: 'center',
   },
   header: {
     marginBottom: Spacing.xl,
   },
   title: {
-    fontSize: FontSizes.xxl,
-    fontWeight: 'bold',
+    fontSize: FontSizes.headlineMd.fontSize,
+    fontWeight: '600',
     color: Colors.text,
     marginBottom: Spacing.xs,
   },
   subtitle: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.bodyMd.fontSize,
     color: Colors.textSecondary,
   },
   form: {},
   lockoutBanner: {
-    backgroundColor: '#FFEBEE',
-    borderRadius: 12,
+    backgroundColor: Colors.errorContainer,
+    borderRadius: BorderRadius.md,
     padding: Spacing.md,
     marginBottom: Spacing.md,
     borderWidth: 1,
@@ -215,7 +222,7 @@ const styles = StyleSheet.create({
   },
   lockoutText: {
     color: Colors.error,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -223,37 +230,45 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   label: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
-  input: {
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
-    padding: Spacing.md,
-    fontSize: FontSizes.md,
-    color: Colors.text,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: Spacing.md,
   },
   inputError: {
     borderColor: Colors.error,
   },
+  inputIcon: {
+    fontSize: 16,
+    marginRight: Spacing.sm,
+    color: Colors.textMuted,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    fontSize: FontSizes.bodyMd.fontSize,
+    color: Colors.text,
+  },
   inputDisabled: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: Colors.surfaceContainerHighest,
     color: Colors.textMuted,
   },
   errorText: {
     color: Colors.error,
-    fontSize: FontSizes.xs,
+    fontSize: FontSizes.labelSm.fontSize,
     marginTop: Spacing.xs,
   },
   passwordContainer: {
     position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 80,
   },
   showPassword: {
     position: 'absolute',
@@ -264,7 +279,7 @@ const styles = StyleSheet.create({
   },
   showPasswordText: {
     color: Colors.primary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
   },
   textDisabled: {
@@ -276,21 +291,27 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: Colors.primary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
   },
   button: {
     backgroundColor: Colors.primary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: FontSizes.md,
+    color: Colors.onPrimary,
+    fontSize: FontSizes.bodyMd.fontSize,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   registerLink: {
     flexDirection: 'row',
@@ -299,11 +320,21 @@ const styles = StyleSheet.create({
   },
   registerText: {
     color: Colors.textSecondary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
   },
   registerLinkText: {
     color: Colors.primary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
+  },
+  branding: {
+    alignItems: 'center',
+    paddingBottom: Spacing.lg,
+  },
+  brandText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primary,
+    letterSpacing: '0.2em',
   },
 });

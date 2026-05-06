@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing, FontSizes } from '../../src/constants/theme';
+import { Colors, Spacing, FontSizes, BorderRadius } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function RegisterScreen() {
@@ -70,7 +70,8 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     clearError();
-    
+    setErrors({});
+
     if (!validateForm()) {
       return;
     }
@@ -84,19 +85,19 @@ export default function RegisterScreen() {
     });
 
     if (success) {
-      router.replace('/verify');
+      router.replace({ pathname: '/(auth)/verify', params: { email: useEmail ? email.trim() : '' } });
     } else if (error) {
-      Alert.alert('Registration Failed', error);
+      setErrors({ form: error });
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -106,17 +107,29 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.form}>
+            {errors.form && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{errors.form}</Text>
+              </View>
+            )}
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                placeholder="Enter your full name"
-                placeholderTextColor={Colors.textMuted}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+              <View style={[styles.inputContainer, errors.name ? styles.inputError : null]}>
+                <Text style={styles.inputIcon}>👤</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your full name"
+                  placeholderTextColor={Colors.textMuted}
+                  value={name}
+                  onChangeText={(text) => {
+                    setName(text);
+                    if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+                  }}
+                  autoCapitalize="words"
+                />
+              </View>
+              {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
             </View>
 
             <View style={styles.toggleContainer}>
@@ -140,45 +153,60 @@ export default function RegisterScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{useEmail ? 'Email' : 'Phone Number'}</Text>
-              <TextInput
-                style={[styles.input, (errors.email || errors.phone) && styles.inputError]}
-                placeholder={useEmail ? 'Enter your email' : 'Enter your phone number'}
-                placeholderTextColor={Colors.textMuted}
-                value={useEmail ? email : phone}
-                onChangeText={useEmail ? setEmail : setPhone}
-                keyboardType={useEmail ? 'email-address' : 'phone-pad'}
-                autoCapitalize="none"
-              />
-              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-              {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+              <View style={[styles.inputContainer, (errors.email || errors.phone) ? styles.inputError : null]}>
+                <Text style={styles.inputIcon}>✉</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={useEmail ? 'Enter your email' : 'Enter your phone number'}
+                  placeholderTextColor={Colors.textMuted}
+                  value={useEmail ? email : phone}
+                  onChangeText={useEmail ? setEmail : setPhone}
+                  keyboardType={useEmail ? 'email-address' : 'phone-pad'}
+                  autoCapitalize="none"
+                />
+              </View>
+              {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+              {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="Create a password (min 8 characters)"
-                placeholderTextColor={Colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              <View style={[styles.inputContainer, errors.password ? styles.inputError : null]}>
+                <Text style={styles.inputIcon}>🔒</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Create a password (min 8 characters)"
+                  placeholderTextColor={Colors.textMuted}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
+                  }}
+                  secureTextEntry
+                />
+              </View>
+              {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={[styles.input, errors.confirmPassword && styles.inputError]}
-                placeholder="Confirm your password"
-                placeholderTextColor={Colors.textMuted}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-              {errors.confirmPassword && (
+              <View style={[styles.inputContainer, errors.confirmPassword ? styles.inputError : null]}>
+                <Text style={styles.inputIcon}>🔒</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm your password"
+                  placeholderTextColor={Colors.textMuted}
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: '' }));
+                  }}
+                  secureTextEntry
+                />
+              </View>
+              {errors.confirmPassword ? (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-              )}
+              ) : null}
             </View>
 
             <View style={styles.inputGroup}>
@@ -217,7 +245,7 @@ export default function RegisterScreen() {
 
             <View style={styles.loginLink}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/login')}>
+              <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
                 <Text style={styles.loginLinkText}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -238,73 +266,97 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
   },
   header: {
-    marginTop: Spacing.xl,
     marginBottom: Spacing.xl,
   },
   title: {
-    fontSize: FontSizes.xxl,
-    fontWeight: 'bold',
+    fontSize: FontSizes.headlineMd.fontSize,
+    fontWeight: '600',
     color: Colors.text,
     marginBottom: Spacing.xs,
   },
   subtitle: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.bodyMd.fontSize,
     color: Colors.textSecondary,
   },
   form: {
     flex: 1,
   },
+  errorBanner: {
+    backgroundColor: Colors.errorContainer,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  errorBannerText: {
+    color: Colors.error,
+    fontSize: FontSizes.labelMd.fontSize,
+    textAlign: 'center',
+  },
   inputGroup: {
     marginBottom: Spacing.md,
   },
   label: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
-  input: {
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
-    padding: Spacing.md,
-    fontSize: FontSizes.md,
-    color: Colors.text,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: Spacing.md,
   },
   inputError: {
     borderColor: Colors.error,
   },
+  inputIcon: {
+    fontSize: 16,
+    marginRight: Spacing.sm,
+    color: Colors.textMuted,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    fontSize: FontSizes.bodyMd.fontSize,
+    color: Colors.text,
+  },
   errorText: {
     color: Colors.error,
-    fontSize: FontSizes.xs,
+    fontSize: FontSizes.labelSm.fontSize,
     marginTop: Spacing.xs,
   },
   toggleContainer: {
     flexDirection: 'row',
     marginBottom: Spacing.md,
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
     padding: 4,
   },
   toggleButton: {
     flex: 1,
-    padding: Spacing.sm,
-    borderRadius: 10,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
   },
   toggleActive: {
     backgroundColor: Colors.primary,
   },
   toggleText: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     color: Colors.textSecondary,
   },
   toggleTextActive: {
-    color: '#FFFFFF',
+    color: Colors.onPrimary,
     fontWeight: '600',
   },
   roleContainer: {
@@ -313,19 +365,19 @@ const styles = StyleSheet.create({
   },
   roleButton: {
     flex: 1,
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: BorderRadius.md,
     padding: Spacing.md,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
   },
   roleActive: {
     borderColor: Colors.primary,
-    backgroundColor: '#F3E5F5',
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
   },
   roleText: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.bodyMd.fontSize,
     fontWeight: '600',
     color: Colors.text,
     marginBottom: 4,
@@ -334,23 +386,29 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   roleDesc: {
-    fontSize: FontSizes.xs,
+    fontSize: FontSizes.labelSm.fontSize,
     color: Colors.textSecondary,
   },
   button: {
     backgroundColor: Colors.primary,
-    borderRadius: 12,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
     marginTop: Spacing.lg,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: FontSizes.md,
+    color: Colors.onPrimary,
+    fontSize: FontSizes.bodyMd.fontSize,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   loginLink: {
     flexDirection: 'row',
@@ -360,11 +418,11 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: Colors.textSecondary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
   },
   loginLinkText: {
     color: Colors.primary,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.labelMd.fontSize,
     fontWeight: '600',
   },
 });
