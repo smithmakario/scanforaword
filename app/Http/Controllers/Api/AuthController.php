@@ -25,10 +25,13 @@ class AuthController extends Controller
             'role' => $validated['role'] ?? 'user',
         ]);
 
+        $this->sendOtp($user);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
+            'message' => 'Registration successful. Please verify your email.',
             'data' => $user,
             'access_token' => $token,
             'token_type' => 'Bearer',
@@ -50,14 +53,70 @@ class AuthController extends Controller
         }
 
         $user = \App\Models\User::where('email', $request['email'])->firstOrFail();
+        
+        // If not verified, send OTP
+        if (!$user->email_verified_at) {
+            $this->sendOtp($user);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => 'success',
+            'message' => $user->email_verified_at ? 'Login successful' : 'Please verify your email.',
             'data' => $user,
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'is_verified' => (bool)$user->email_verified_at
         ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|string|size:6',
+        ]);
+
+        $user = $request->user();
+
+        if ($user->otp_code !== $request->otp || now()->gt($user->otp_expires_at)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid or expired OTP code'
+            ], 422);
+        }
+
+        $user->email_verified_at = now();
+        $user->otp_code = null;
+        $user->otp_expires_at = null;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Email verified successfully',
+            'data' => $user
+        ]);
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $user = $request->user();
+        $this->sendOtp($user);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'New OTP code sent to your email'
+        ]);
+    }
+
+    private function sendOtp($user)
+    {
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user->otp_code = $otp;
+        $user->otp_expires_at = now()->addMinutes(10);
+        $user->save();
+
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\VerificationOtp($user->email, $otp));
     }
 
     public function profile(Request $request)

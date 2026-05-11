@@ -28,9 +28,35 @@ For all "Auth Required" endpoints, include the following header:
     ```json
     {
       "status": "success",
+      "message": "Registration successful. Please verify your email.",
       "data": { ...user_info },
       "access_token": "...",
       "token_type": "Bearer"
+    }
+    ```
+
+### Verify OTP (Auth Required)
+*   **URL:** `/verify-otp`
+*   **Method:** `POST`
+*   **Body Parameters:**
+    *   `otp` (String, Required, Size: 6)
+*   **Success Response:**
+    ```json
+    {
+      "status": "success",
+      "message": "Email verified successfully",
+      "data": { ...user_info }
+    }
+    ```
+
+### Resend OTP (Auth Required)
+*   **URL:** `/resend-otp`
+*   **Method:** `POST`
+*   **Success Response:**
+    ```json
+    {
+      "status": "success",
+      "message": "New OTP code sent to your email"
     }
     ```
 
@@ -44,9 +70,11 @@ For all "Auth Required" endpoints, include the following header:
     ```json
     {
       "status": "success",
+      "message": "Login successful",
       "data": { ...user_info },
       "access_token": "...",
-      "token_type": "Bearer"
+      "token_type": "Bearer",
+      "is_verified": true
     }
     ```
 
@@ -138,8 +166,6 @@ Endpoints for personalized daily word delivery.
 *   **URL:** `/daily-word`
 *   **Method:** `GET`
 *   **Parameters:** `identifier`.
-
----
 
 ---
 
