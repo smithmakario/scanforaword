@@ -14,7 +14,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'phone_number' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'nullable|string|in:user,creator'
+            'role' => 'nullable|string|in:user,creator,admin'
         ]);
 
         $user = \App\Models\User::create([
@@ -52,7 +52,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = \App\Models\User::where('email', $request['email'])->firstOrFail();
+        $user = \App\Models\User::query()->where('email', $request->input('email'))->firstOrFail();
         
         // If not verified, send OTP
         if (!$user->email_verified_at) {
@@ -129,7 +129,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
 
         return response()->json([
             'status' => 'success',

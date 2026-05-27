@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\DailyWordController;
 use App\Http\Controllers\Api\AuthController;
@@ -27,6 +28,19 @@ Route::middleware('throttle:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
         Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+
+        // Admin Routes
+        Route::prefix('admin')->middleware('role:admin')->group(function () {
+            Route::get('/dashboard', [AdminController::class, 'dashboard']);
+            Route::get('/users', [AdminController::class, 'users']);
+            Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole']);
+            Route::get('/messages', [AdminController::class, 'messages']);
+            Route::patch('/messages/{message}/status', [AdminController::class, 'updateMessageStatus']);
+            Route::get('/categories', [AdminController::class, 'categories']);
+            Route::post('/categories', [AdminController::class, 'createCategory']);
+            Route::get('/daily-words', [AdminController::class, 'dailyWords']);
+            Route::post('/daily-words', [AdminController::class, 'createDailyWord']);
+        });
 
         // Creator Routes
         Route::prefix('creator')->middleware('role:creator')->group(function () {

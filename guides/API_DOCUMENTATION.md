@@ -23,7 +23,7 @@ For all "Auth Required" endpoints, include the following header:
     *   `email` (String, Required, Unique)
     *   `phone_number` (String, Optional)
     *   `password` (String, Required, Min: 8)
-    *   `role` (String, Optional, default: `user`, choices: `user`, `creator`)
+    *   `role` (String, Optional, default: `user`, choices: `user`, `creator`, `admin`)
 *   **Success Response:**
     ```json
     {
@@ -101,7 +101,52 @@ Endpoints for creators to manage content and view analytics.
 
 ---
 
-## 3. Search & Discovery
+## 3. Admin Management (Auth Required)
+Endpoints for platform administrators to review system health and manage users and content.
+
+### Admin Dashboard
+*   **URL:** `/admin/dashboard`
+*   **Method:** `GET`
+*   **Access:** `admin` role only
+*   **Success Response:** Returns aggregate counts for users, creators, messages, snippets, bookmarks, categories, and daily words.
+
+### List Users
+*   **URL:** `/admin/users`
+*   **Method:** `GET`
+*   **Access:** `admin` role only
+*   **Success Response:** Returns the current user roster with role and verification status.
+
+### Update User Role
+*   **URL:** `/admin/users/{id}/role`
+*   **Method:** `PATCH`
+*   **Body Parameters:** `role` (`user`, `creator`, `admin`)
+*   **Success Response:** Returns the updated user record.
+
+### List Messages
+*   **URL:** `/admin/messages`
+*   **Method:** `GET`
+*   **Success Response:** Returns all messages for moderation and operational oversight.
+
+### Update Message Status
+*   **URL:** `/admin/messages/{id}/status`
+*   **Method:** `PATCH`
+*   **Body Parameters:** `status` (`processing`, `live`, `archived`)
+
+### Manage Categories
+*   **URL:** `/admin/categories`
+*   **Method:** `GET` or `POST`
+*   **POST Body Parameters:** `name`
+
+### Manage Daily Words
+*   **URL:** `/admin/daily-words`
+*   **Method:** `GET` or `POST`
+*   **POST Body Parameters:** `snippet_id`, `category_id`, `scheduled_for`
+
+> Example: to promote a user to an administrator, send `PATCH /api/admin/users/42/role` with `{"role":"admin"}` using an `Authorization: Bearer <admin-token>` header.
+
+---
+
+## 4. Search & Discovery
 Endpoints for searching content and viewing trends.
 
 ### Search
@@ -129,7 +174,7 @@ Endpoints for searching content and viewing trends.
 
 ---
 
-## 4. Library & Bookmarks (Auth Required)
+## 5. Library & Bookmarks (Auth Required)
 Endpoints for managing saved insights.
 
 ### Get Bookmarks
@@ -149,7 +194,7 @@ Endpoints for managing saved insights.
 
 ---
 
-## 5. Daily Word & Preferences
+## 6. Daily Word & Preferences
 Endpoints for personalized daily word delivery.
 
 ### Get Categories
@@ -169,7 +214,7 @@ Endpoints for personalized daily word delivery.
 
 ---
 
-## 6. Security & RBAC
+## 7. Security & RBAC
 The API implements several security protocols to protect data and resources.
 
 ### Role-Based Access Control (RBAC)
