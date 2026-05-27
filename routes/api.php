@@ -48,7 +48,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::post('/creator/request', [AuthController::class, 'requestCreator']);
 
         // Creator Routes
-        Route::prefix('creator')->group(function () {
+        Route::prefix('creator')->middleware('role:creator')->group(function () {
             Route::get('/stats', [CreatorController::class, 'getStats']);
             Route::get('/messages', [CreatorController::class, 'getRecentUploads']);
             Route::post('/upload', [CreatorController::class, 'uploadMessage']);

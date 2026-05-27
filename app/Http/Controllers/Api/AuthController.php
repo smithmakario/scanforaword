@@ -39,7 +39,6 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Registration successful. Please verify your email.',
-            'message' => 'Registration successful. Please verify your email.',
             'data' => $user,
             'access_token' => $token,
             'token_type' => 'Bearer',
@@ -53,7 +52,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
+        $user = \App\Models\User::query()->where('email', $request->input('email'))->first();
 
         if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -62,8 +61,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = \App\Models\User::query()->where('email', $request->input('email'))->firstOrFail();
-        
         // If not verified, send OTP
         if (!$user->email_verified_at) {
             $this->sendOtp($user);
@@ -126,7 +123,9 @@ class AuthController extends Controller
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
-        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\VerificationOtp($user->email, $otp));
+        if (!empty($user->email)) {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\VerificationOtp($user->email, $otp));
+        }
     }
 
     public function profile(Request $request)
@@ -255,7 +254,7 @@ class AuthController extends Controller
             'email' => 'required|string|email',
         ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
+        $user = \App\Models\User::query()->where('email', $request->input('email'))->first();
 
         if (!$user) {
             return response()->json([
@@ -280,7 +279,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = \App\Models\User::where('email', $request->email)
+        $user = \App\Models\User::query()->where('email', $request->input('email'))
             ->where('verification_code', $request->code)
             ->first();
 
