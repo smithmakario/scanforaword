@@ -14,10 +14,16 @@ class Message extends Model
         'status',
         'listens_count',
         'duration',
+        'content',
     ];
 
     public function snippets()
     {
         return $this->hasMany(Snippet::class);
+    }
+
+    public function keywords()
+    {
+        return $this->belongsToMany(Keyword::class);
     }
 }

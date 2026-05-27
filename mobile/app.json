@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Scan for a Word",
+    "slug": "scanforaword",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "scanforaword",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A154B"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.scanforaword.app"
+    },
+    "android": {
+      "package": "com.scanforaword.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4A154B"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "vite"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d547510f-b793-4c3a-badf-e412a2110a68"
+      }
+    },
+    "owner": "mishael_code"
+  }
+}

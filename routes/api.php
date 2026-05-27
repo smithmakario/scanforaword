@@ -21,6 +21,10 @@ Route::middleware('throttle:api')->group(function () {
     // Auth Routes
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/verify', [AuthController::class, 'verify']);
+    Route::post('/resend-code', [AuthController::class, 'resendCode']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/login/social', [AuthController::class, 'socialLogin']); // Placeholder for Google/Apple
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -41,9 +45,10 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/daily-words', [AdminController::class, 'dailyWords']);
             Route::post('/daily-words', [AdminController::class, 'createDailyWord']);
         });
+        Route::post('/creator/request', [AuthController::class, 'requestCreator']);
 
         // Creator Routes
-        Route::prefix('creator')->middleware('role:creator')->group(function () {
+        Route::prefix('creator')->group(function () {
             Route::get('/stats', [CreatorController::class, 'getStats']);
             Route::get('/messages', [CreatorController::class, 'getRecentUploads']);
             Route::post('/upload', [CreatorController::class, 'uploadMessage']);
