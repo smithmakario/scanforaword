@@ -20,10 +20,11 @@ For all "Auth Required" endpoints, include the following header:
 *   **Method:** `POST`
 *   **Body Parameters:**
     *   `name` (String, Required)
-    *   `email` (String, Required, Unique)
-    *   `phone_number` (String, Optional)
+    *   `email` (String, Optional, Unique)
+    *   `phone_number` (String, Optional, Unique)
     *   `password` (String, Required, Min: 8)
     *   `role` (String, Optional, default: `user`, choices: `user`, `creator`, `admin`)
+*   **Notes:** At least one of `email` or `phone_number` must be provided.
 *   **Success Response:**
     ```json
     {
@@ -78,6 +79,29 @@ For all "Auth Required" endpoints, include the following header:
     }
     ```
 
+### Verify Email Code
+*   **URL:** `/verify`
+*   **Method:** `POST`
+*   **Body Parameters:** `code` (String, Required, Size: 6)
+*   **Success Response:** Confirms the user email is verified.
+
+### Resend Verification Code
+*   **URL:** `/resend-code`
+*   **Method:** `POST`
+*   **Success Response:** Sends a fresh verification code.
+
+### Forgot Password
+*   **URL:** `/forgot-password`
+*   **Method:** `POST`
+*   **Body Parameters:** `email` (String, Required)
+*   **Success Response:** Returns a generic success message for security.
+
+### Reset Password
+*   **URL:** `/reset-password`
+*   **Method:** `POST`
+*   **Body Parameters:** `email`, `code`, `password`, `password_confirmation`
+*   **Success Response:** Returns a new access token after password reset.
+
 ---
 
 ## 2. Creator Dashboard (Auth Required)
@@ -98,6 +122,12 @@ Endpoints for creators to manage content and view analytics.
 *   **Method:** `POST`
 *   **Body Parameters:** `title`, `description`, `speaker`, `full_url`, `duration`.
 *   **Success Response:** Returns the newly created message with `status: processing`.
+
+### Request Creator Access
+*   **URL:** `/creator/request`
+*   **Method:** `POST`
+*   **Auth Required:** Yes
+*   **Success Response:** Marks the user request as pending for creator access review.
 
 ---
 
@@ -220,7 +250,8 @@ The API implements several security protocols to protect data and resources.
 ### Role-Based Access Control (RBAC)
 Certain endpoints are restricted based on user roles:
 - **User**: Can search, save bookmarks, and set preferences.
-- **Creator**: Can access the Creator Dashboard and upload new messages.
+- **Creator**: Can access the Creator Dashboard, upload new messages, and view creator analytics.
+- **Admin**: Can access the full administration suite (`/admin/*`) to manage users, content, categories, and daily words.
 Accessing a restricted route without the correct role will return a `403 Forbidden` error.
 
 ### Rate Limiting
