@@ -34,6 +34,7 @@ class CreatorSupabaseUploadTest extends TestCase
 
         $response = $this->actingAs($creator, 'sanctum')
             ->post('/api/creator/upload', [
+                'mode' => 'direct',
                 'title' => 'Supabase Upload Test',
                 'keywords' => 'faith,grace',
                 'audio_file' => UploadedFile::fake()->create('sample.mp3', 1000, 'audio/mpeg'),
@@ -59,6 +60,28 @@ class CreatorSupabaseUploadTest extends TestCase
                 $request->hasHeader('Authorization') &&
                 $request->header('Authorization')[0] === 'Bearer test-service-key';
         });
+    }
+
+    public function test_creator_can_submit_indirect_upload_links(): void
+    {
+        $creator = User::factory()->create([
+            'role' => 'creator',
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($creator, 'sanctum')
+            ->post('/api/creator/upload', [
+                'mode' => 'indirect',
+                'title' => 'Indirect Upload Test',
+                'keywords' => 'wisdom,hope',
+                'audio_url' => 'https://audio.example.com/podcast.mp3',
+                'image_url' => 'https://images.example.com/cover.jpg',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.audio_url', 'https://audio.example.com/podcast.mp3')
+            ->assertJsonPath('data.image_url', 'https://images.example.com/cover.jpg');
     }
 
     public function test_creator_can_delete_own_message_and_supabase_objects(): void

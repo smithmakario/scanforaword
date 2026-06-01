@@ -127,19 +127,27 @@ Endpoints for creators to manage content and view analytics.
 *   **URL:** `/creator/upload`
 *   **Method:** `POST`
 *   **Body Parameters:**
+    *   `mode` (String, Required) - `direct` or `indirect`
     *   `title` (String, Required)
     *   `description` (String, Optional)
     *   `speaker` (String, Optional)
     *   `duration` (String, Optional)
     *   `keywords` (String, Required, comma-separated)
     *   `content` (String, Optional)
-    *   `full_url` (String, Optional) - existing audio URL fallback
+    *   `full_url` (String, Optional) - legacy audio URL fallback
+
+*   **Direct mode parameters:**
     *   `audio_file` (File, Optional) - direct audio upload
     *   `audio_base64` (String, Optional) - base64-encoded audio content
     *   `audio_extension` (String, Optional, one of `mp3`, `wav`, `m4a`, `ogg`, `aac`)
     *   `image_file` (File, Optional) - direct cover image upload
     *   `image_base64` (String, Optional) - base64-encoded image content
     *   `image_extension` (String, Optional, one of `jpg`, `jpeg`, `png`, `gif`, `webp`)
+
+*   **Indirect mode parameters:**
+    *   `audio_url` (String, Optional) - external audio link
+    *   `image_url` (String, Optional) - external image link
+
 *   **Success Response:** Returns the newly created message with `status: processing`, `audio_url`, and `image_url`.
 
 ### Supabase Storage Configuration

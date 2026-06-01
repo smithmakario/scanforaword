@@ -98,6 +98,7 @@ class CreatorController extends Controller
         }
 
         $validated = $request->validate([
+            'mode' => 'required|string|in:direct,indirect',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'speaker' => 'nullable|string',
@@ -105,6 +106,8 @@ class CreatorController extends Controller
             'keywords' => 'required|string',
             'content' => 'nullable|string',
             'full_url' => 'nullable|url',
+            'audio_url' => 'nullable|url',
+            'image_url' => 'nullable|url',
             'audio_file' => 'nullable|file|mimes:mp3,wav,m4a,ogg,aac|max:102400',
             'audio_base64' => 'nullable|string',
             'audio_extension' => 'nullable|string|in:mp3,wav,m4a,ogg,aac',
@@ -113,81 +116,100 @@ class CreatorController extends Controller
             'image_extension' => 'nullable|string|in:jpg,jpeg,png,gif,webp',
         ]);
 
-        $needsSupabase = $request->hasFile('audio_file')
-            || !empty($validated['audio_base64'])
-            || $request->hasFile('image_file')
-            || !empty($validated['image_base64']);
-
-        $supabase = $needsSupabase ? $this->supabaseConfig() : null;
-
-        if ($needsSupabase && (!$supabase['url'] || !$supabase['key'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Supabase storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.'
-            ], 500);
-        }
-
         $audioUrl = null;
         $imageUrl = null;
 
-        if ($request->hasFile('audio_file')) {
-            $audioFile = $request->file('audio_file');
-            $audioUrl = $this->uploadSupabaseFile(
-                $supabase['url'],
-                $supabase['key'],
-                $supabase['audio_bucket'],
-                $this->buildObjectPath('audio', $audioFile->getClientOriginalExtension()),
-                $audioFile->get(),
-                $audioFile->getMimeType()
-            );
-        } elseif (!empty($validated['audio_base64'])) {
-            $audioData = base64_decode($validated['audio_base64'], true);
-            if ($audioData === false) {
+        if ($validated['mode'] === 'direct') {
+            $needsSupabase = $request->hasFile('audio_file')
+                || !empty($validated['audio_base64'])
+                || $request->hasFile('image_file')
+                || !empty($validated['image_base64']);
+
+            if (! $needsSupabase) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Invalid base64 audio payload.'
+                    'message' => 'Direct mode requires direct audio or image upload via file or base64 payload.'
                 ], 422);
             }
 
-            $extension = $validated['audio_extension'] ?? 'mp3';
-            $audioUrl = $this->uploadSupabaseFile(
-                $supabase['url'],
-                $supabase['key'],
-                $supabase['audio_bucket'],
-                $this->buildObjectPath('audio', $this->normalizeExtension($extension)),
-                $audioData,
-                $this->extensionToMimeType($extension)
-            );
-        }
+            $supabase = $this->supabaseConfig();
 
-        if ($request->hasFile('image_file')) {
-            $imageFile = $request->file('image_file');
-            $imageUrl = $this->uploadSupabaseFile(
-                $supabase['url'],
-                $supabase['key'],
-                $supabase['image_bucket'],
-                $this->buildObjectPath('image', $imageFile->getClientOriginalExtension()),
-                $imageFile->get(),
-                $imageFile->getMimeType()
-            );
-        } elseif (!empty($validated['image_base64'])) {
-            $imageData = base64_decode($validated['image_base64'], true);
-            if ($imageData === false) {
+            if (!$supabase['url'] || !$supabase['key']) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Invalid base64 image payload.'
-                ], 422);
+                    'message' => 'Supabase storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY.'
+                ], 500);
             }
 
-            $extension = $validated['image_extension'] ?? 'jpg';
-            $imageUrl = $this->uploadSupabaseFile(
-                $supabase['url'],
-                $supabase['key'],
-                $supabase['image_bucket'],
-                $this->buildObjectPath('image', $this->normalizeExtension($extension)),
-                $imageData,
-                $this->extensionToMimeType($extension)
-            );
+            if ($request->hasFile('audio_file')) {
+                $audioFile = $request->file('audio_file');
+                $audioUrl = $this->uploadSupabaseFile(
+                    $supabase['url'],
+                    $supabase['key'],
+                    $supabase['audio_bucket'],
+                    $this->buildObjectPath('audio', $audioFile->getClientOriginalExtension()),
+                    $audioFile->get(),
+                    $audioFile->getMimeType()
+                );
+            } elseif (!empty($validated['audio_base64'])) {
+                $audioData = base64_decode($validated['audio_base64'], true);
+                if ($audioData === false) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Invalid base64 audio payload.'
+                    ], 422);
+                }
+
+                $extension = $validated['audio_extension'] ?? 'mp3';
+                $audioUrl = $this->uploadSupabaseFile(
+                    $supabase['url'],
+                    $supabase['key'],
+                    $supabase['audio_bucket'],
+                    $this->buildObjectPath('audio', $this->normalizeExtension($extension)),
+                    $audioData,
+                    $this->extensionToMimeType($extension)
+                );
+            }
+
+            if ($request->hasFile('image_file')) {
+                $imageFile = $request->file('image_file');
+                $imageUrl = $this->uploadSupabaseFile(
+                    $supabase['url'],
+                    $supabase['key'],
+                    $supabase['image_bucket'],
+                    $this->buildObjectPath('image', $imageFile->getClientOriginalExtension()),
+                    $imageFile->get(),
+                    $imageFile->getMimeType()
+                );
+            } elseif (!empty($validated['image_base64'])) {
+                $imageData = base64_decode($validated['image_base64'], true);
+                if ($imageData === false) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Invalid base64 image payload.'
+                    ], 422);
+                }
+
+                $extension = $validated['image_extension'] ?? 'jpg';
+                $imageUrl = $this->uploadSupabaseFile(
+                    $supabase['url'],
+                    $supabase['key'],
+                    $supabase['image_bucket'],
+                    $this->buildObjectPath('image', $this->normalizeExtension($extension)),
+                    $imageData,
+                    $this->extensionToMimeType($extension)
+                );
+            }
+        } else {
+            $audioUrl = $validated['audio_url'] ?? $validated['full_url'] ?? null;
+            $imageUrl = $validated['image_url'] ?? null;
+
+            if (!$audioUrl && !$imageUrl) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Indirect mode requires an audio_url or image_url.'
+                ], 422);
+            }
         }
 
         $message = \App\Models\Message::create([
