@@ -40,10 +40,13 @@ Route::middleware('throttle:api')->group(function () {
             Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole']);
             Route::get('/messages', [AdminController::class, 'messages']);
             Route::patch('/messages/{message}/status', [AdminController::class, 'updateMessageStatus']);
+            Route::delete('/messages/{message}', [AdminController::class, 'deleteMessage']);
             Route::get('/categories', [AdminController::class, 'categories']);
             Route::post('/categories', [AdminController::class, 'createCategory']);
+            Route::delete('/categories/{category}', [AdminController::class, 'deleteCategory']);
             Route::get('/daily-words', [AdminController::class, 'dailyWords']);
             Route::post('/daily-words', [AdminController::class, 'createDailyWord']);
+            Route::delete('/daily-words/{dailyWord}', [AdminController::class, 'deleteDailyWord']);
         });
         Route::post('/creator/request', [AuthController::class, 'requestCreator']);
 
@@ -52,6 +55,7 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/stats', [CreatorController::class, 'getStats']);
             Route::get('/messages', [CreatorController::class, 'getRecentUploads']);
             Route::post('/upload', [CreatorController::class, 'uploadMessage']);
+            Route::delete('/messages/{message}', [CreatorController::class, 'deleteMessage']);
         });
 
         // Library Routes

@@ -12,6 +12,7 @@ class Message extends Model
         'full_url',
         'audio_url',
         'image_url',
+        'creator_id',
         'speaker',
         'status',
         'listens_count',

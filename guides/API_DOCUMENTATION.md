@@ -117,6 +117,12 @@ Endpoints for creators to manage content and view analytics.
 *   **Method:** `GET`
 *   **Success Response:** Returns uploads with `status`, `duration`, and `listens_count`.
 
+### Delete Uploaded Message
+*   **URL:** `/creator/messages/{id}`
+*   **Method:** `DELETE`
+*   **Access:** Creator may delete only their own uploaded message.
+*   **Success Response:** Returns a confirmation message when the message and associated Supabase storage objects are removed.
+
 ### Upload Message
 *   **URL:** `/creator/upload`
 *   **Method:** `POST`
@@ -177,6 +183,11 @@ Endpoints for platform administrators to review system health and manage users a
 *   **Method:** `GET`
 *   **Success Response:** Returns all messages for moderation and operational oversight.
 
+### Delete Message
+*   **URL:** `/admin/messages/{id}`
+*   **Method:** `DELETE`
+*   **Success Response:** Returns a confirmation message when the message is removed.
+
 ### Update Message Status
 *   **URL:** `/admin/messages/{id}/status`
 *   **Method:** `PATCH`
@@ -187,10 +198,20 @@ Endpoints for platform administrators to review system health and manage users a
 *   **Method:** `GET` or `POST`
 *   **POST Body Parameters:** `name`
 
+### Delete Category
+*   **URL:** `/admin/categories/{id}`
+*   **Method:** `DELETE`
+*   **Success Response:** Removes the category.
+
 ### Manage Daily Words
 *   **URL:** `/admin/daily-words`
 *   **Method:** `GET` or `POST`
 *   **POST Body Parameters:** `snippet_id`, `category_id`, `scheduled_for`
+
+### Delete Daily Word
+*   **URL:** `/admin/daily-words/{id}`
+*   **Method:** `DELETE`
+*   **Success Response:** Removes the scheduled daily word.
 
 > Example: to promote a user to an administrator, send `PATCH /api/admin/users/42/role` with `{"role":"admin"}` using an `Authorization: Bearer <admin-token>` header.
 

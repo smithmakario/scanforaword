@@ -47,11 +47,42 @@ class CreatorController extends Controller
             ], 403);
         }
         
-        $messages = \App\Models\Message::query()->latest()->take(5)->get();
+        $messages = \App\Models\Message::query()
+            ->where('creator_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
 
         return response()->json([
             'status' => 'success',
             'data' => $messages
+        ]);
+    }
+
+    public function deleteMessage(Request $request, \App\Models\Message $message)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'creator') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Access denied. Creator role required.'
+            ], 403);
+        }
+
+        if ($message->creator_id !== $user->id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You may only delete your own messages.'
+            ], 403);
+        }
+
+        $this->deleteAssociatedSupabaseObjects($message);
+        $message->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Message deleted successfully.'
         ]);
     }
 
@@ -164,6 +195,7 @@ class CreatorController extends Controller
             'description' => $validated['description'] ?? null,
             'content' => $validated['content'] ?? null,
             'speaker' => $validated['speaker'] ?? $user->name,
+            'creator_id' => $user->id,
             'full_url' => $audioUrl ?: ($validated['full_url'] ?? null),
             'audio_url' => $audioUrl,
             'image_url' => $imageUrl,
@@ -244,6 +276,51 @@ class CreatorController extends Controller
         }
 
         return $this->buildPublicFileUrl($baseUrl, $bucket, $objectPath);
+    }
+
+    private function deleteAssociatedSupabaseObjects(\App\Models\Message $message): void
+    {
+        $supabase = $this->supabaseConfig();
+
+        if (!$supabase['url'] || !$supabase['key']) {
+            return;
+        }
+
+        foreach (['audio_url' => $supabase['audio_bucket'], 'image_url' => $supabase['image_bucket']] as $field => $bucket) {
+            if (!empty($message->{$field})) {
+                $objectPath = $this->extractSupabaseObjectPath($message->{$field}, $bucket);
+                if ($objectPath) {
+                    $this->deleteSupabaseObject($supabase['url'], $supabase['key'], $bucket, $objectPath);
+                }
+            }
+        }
+    }
+
+    private function extractSupabaseObjectPath(string $url, string $bucket): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) {
+            return null;
+        }
+
+        $needle = "/storage/v1/object/public/{$bucket}/";
+        $position = strpos($path, $needle);
+
+        if ($position === false) {
+            return null;
+        }
+
+        return substr($path, $position + strlen($needle));
+    }
+
+    private function deleteSupabaseObject(string $baseUrl, string $serviceKey, string $bucket, string $objectPath): bool
+    {
+        $response = Http::withHeaders([
+            'apikey' => $serviceKey,
+            'Authorization' => 'Bearer '.$serviceKey,
+        ])->delete(rtrim($baseUrl, '/')."/storage/v1/object/{$bucket}/{$objectPath}");
+
+        return !$response->failed();
     }
 
     private function buildPublicFileUrl(string $baseUrl, string $bucket, string $objectPath): string

@@ -9,6 +9,7 @@ use App\Models\Message;
 use App\Models\Snippet;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class AdminController extends Controller
 {
@@ -124,5 +125,86 @@ class AdminController extends Controller
             'message' => 'Daily word scheduled successfully.',
             'data' => $dailyWord->load(['snippet', 'category']),
         ]);
+    }
+
+    public function deleteMessage(Request $request, Message $message)
+    {
+        $this->deleteAssociatedSupabaseObjects($message);
+        $message->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Message removed successfully.',
+        ]);
+    }
+
+    public function deleteCategory(Request $request, Category $category)
+    {
+        $category->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category removed successfully.',
+        ]);
+    }
+
+    public function deleteDailyWord(Request $request, DailyWord $dailyWord)
+    {
+        $dailyWord->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Daily word removed successfully.',
+        ]);
+    }
+
+    private function deleteAssociatedSupabaseObjects(Message $message): void
+    {
+        $supabase = [
+            'url' => config('services.supabase.url'),
+            'key' => config('services.supabase.key'),
+            'audio_bucket' => config('services.supabase.audio_bucket', 'creator-audio'),
+            'image_bucket' => config('services.supabase.image_bucket', 'creator-images'),
+        ];
+
+        if (!$supabase['url'] || !$supabase['key']) {
+            return;
+        }
+
+        foreach (['audio_url' => $supabase['audio_bucket'], 'image_url' => $supabase['image_bucket']] as $field => $bucket) {
+            if (!empty($message->{$field})) {
+                $objectPath = $this->extractSupabaseObjectPath($message->{$field}, $bucket);
+                if ($objectPath) {
+                    $this->deleteSupabaseObject($supabase['url'], $supabase['key'], $bucket, $objectPath);
+                }
+            }
+        }
+    }
+
+    private function extractSupabaseObjectPath(string $url, string $bucket): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) {
+            return null;
+        }
+
+        $needle = "/storage/v1/object/public/{$bucket}/";
+        $position = strpos($path, $needle);
+
+        if ($position === false) {
+            return null;
+        }
+
+        return substr($path, $position + strlen($needle));
+    }
+
+    private function deleteSupabaseObject(string $baseUrl, string $serviceKey, string $bucket, string $objectPath): bool
+    {
+        $response = Http::withHeaders([
+            'apikey' => $serviceKey,
+            'Authorization' => 'Bearer '.$serviceKey,
+        ])->delete(rtrim($baseUrl, '/')."/storage/v1/object/{$bucket}/{$objectPath}");
+
+        return !$response->failed();
     }
 }
