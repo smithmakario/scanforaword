@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_SERVICE_KEY'),
+        'audio_bucket' => env('SUPABASE_AUDIO_BUCKET', 'creator-audio'),
+        'image_bucket' => env('SUPABASE_IMAGE_BUCKET', 'creator-images'),
+    ],
 ];
