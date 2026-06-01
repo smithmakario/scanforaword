@@ -148,6 +148,20 @@ Endpoints for creators to manage content and view analytics.
     *   `audio_url` (String, Optional) - external audio link
     *   `image_url` (String, Optional) - external image link
 
+*   **Example Payloads:**
+    *   Direct mode (multipart/form-data):
+        *   `mode=direct`
+        *   `title=My New Audio`
+        *   `keywords=faith,hope`
+        *   `audio_file=@path/to/audio.mp3`
+        *   `image_file=@path/to/cover.jpg`
+    *   Indirect mode (JSON):
+        *   `mode=indirect`
+        *   `title=Linked Audio Upload`
+        *   `keywords=inspiration,story`
+        *   `audio_url=https://cdn.example.com/audio.mp3`
+        *   `image_url=https://cdn.example.com/cover.jpg`
+
 *   **Success Response:** Returns the newly created message with `status: processing`, `audio_url`, and `image_url`.
 
 ### Supabase Storage Configuration
