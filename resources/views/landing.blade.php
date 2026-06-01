@@ -9,7 +9,7 @@
 
             <div class="actions">
                 <a href="#download" class="button">Download the app</a>
-                <a href="{{ route('admin.dashboard') }}" class="button" style="background: rgba(255,255,255,0.08); color:#f8fafc;">Go to admin portal</a>
+                <a href="{{ route('login') }}" class="button" style="background: rgba(255,255,255,0.08); color:#f8fafc;">Go to admin portal</a>
             </div>
 
             <div class="feature-grid">

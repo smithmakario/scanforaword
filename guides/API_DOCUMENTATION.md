@@ -182,6 +182,8 @@ The creator upload endpoint stores direct uploads in Supabase bucket storage. Co
 ## 3. Admin Management (Auth Required)
 Endpoints for platform administrators to review system health and manage users and content.
 
+*   **Note:** Admin access requires both `admin` role and verified email OTP. Use the `/verify-otp` endpoint after login if needed.
+
 ### Admin Dashboard
 *   **URL:** `/admin/dashboard`
 *   **Method:** `GET`

@@ -74,4 +74,23 @@ class AdminEndpointsTest extends TestCase
             'role' => 'creator',
         ]);
     }
+
+    public function test_unverified_admin_cannot_access_admin_dashboard_api(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email_verified_at' => null,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/dashboard')
+            ->assertStatus(403)
+            ->assertJsonPath('status', 'error');
+    }
+
+    public function test_guest_is_redirected_to_admin_login_page(): void
+    {
+        $this->get('/admin')
+            ->assertRedirect('/admin/login');
+    }
 }

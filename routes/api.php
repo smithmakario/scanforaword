@@ -34,7 +34,7 @@ Route::middleware('throttle:api')->group(function () {
         Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 
         // Admin Routes
-        Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::prefix('admin')->middleware(['role:admin', 'email.verified'])->group(function () {
             Route::get('/dashboard', [AdminController::class, 'dashboard']);
             Route::get('/users', [AdminController::class, 'users']);
             Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole']);

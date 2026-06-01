@@ -9,9 +9,23 @@
             </div>
             <div style="display:inline-flex; gap:10px; align-items:center;">
                 <span style="display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:14px; background: rgba(251, 146, 60, 0.14); color:#fbbf24; font-weight:600;">Live</span>
-                <a href="{{ route('landing') }}" class="button" style="background: rgba(255,255,255,0.08); color:#f8fafc;">Back to landing</a>
+                @auth
+                    <span style="color:#cbd5e1;">{{ auth()->user()->name }}</span>
+                    <form method="POST" action="{{ route('admin.logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit" class="button" style="background: rgba(255,255,255,0.08); color:#f8fafc;">Logout</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="button" style="background: rgba(255,255,255,0.08); color:#f8fafc;">Login</a>
+                @endauth
             </div>
         </div>
+
+        @if(session('status'))
+            <div style="padding:18px 22px; border-radius:20px; background:rgba(16,185,129,0.16); border:1px solid rgba(52,211,153,0.24); color:#dcfce7;">
+                {{ session('status') }}
+            </div>
+        @endif
 
         <div class="admin-grid">
             <div class="panel-card">

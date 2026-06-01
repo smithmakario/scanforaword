@@ -16,10 +16,14 @@ class CheckRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if (!$request->user() || $request->user()->role !== $role) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized: Access restricted to ' . $role . ' only.'
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unauthorized: Access restricted to ' . $role . ' only.'
+                ], 403);
+            }
+
+            return redirect()->route('landing')->with('error', 'Unauthorized: Access restricted to ' . $role . ' only.');
         }
 
         return $next($request);
