@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Message extends Model
 {
@@ -28,5 +29,10 @@ class Message extends Model
     public function keywords()
     {
         return $this->belongsToMany(Keyword::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
     }
 }

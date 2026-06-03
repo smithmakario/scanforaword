@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Mail\VerificationOtp;
 use App\Models\User;
+use App\Models\Bookmark;
+use App\Models\Category;
+use App\Models\DailyWord;
+use App\Models\Message;
+use App\Models\Snippet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 
 class AdminPageController extends Controller
 {
@@ -55,11 +61,91 @@ class AdminPageController extends Controller
 
     public function showDashboard(Request $request)
     {
-        $dashboardResponse = app(\App\Http\Controllers\Api\AdminController::class)->dashboard($request);
-        $payload = json_decode($dashboardResponse->getContent(), true);
-        $data = $payload['data'] ?? [];
+        $stats = [
+            'users' => User::count(),
+            'creators' => User::where('role', 'creator')->count(),
+            'messages' => Message::count(),
+            'snippets' => Snippet::count(),
+            'bookmarks' => Bookmark::count(),
+            'categories' => Category::count(),
+            'daily_words' => DailyWord::count(),
+        ];
 
-        return view('admin.dashboard', compact('data'));
+        $messages = Message::with('keywords', 'creator')->latest()->take(12)->get();
+        $users = User::latest()->take(12)->get();
+        $categories = Category::latest()->get();
+        $dailyWords = DailyWord::with(['snippet', 'category'])->latest()->take(12)->get();
+        $snippets = Snippet::latest()->take(20)->get();
+
+        return view('admin.dashboard', compact('stats', 'messages', 'users', 'categories', 'dailyWords', 'snippets'));
+    }
+
+    public function updateMessageStatus(Request $request, Message $message)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:processing,live,archived',
+        ]);
+
+        $message->update(['status' => $validated['status']]);
+
+        return back()->with('status', 'Message status updated to ' . $validated['status'] . '.');
+    }
+
+    public function deleteMessage(Request $request, Message $message)
+    {
+        $this->deleteAssociatedSupabaseObjects($message);
+        $message->delete();
+
+        return back()->with('status', 'Message removed successfully.');
+    }
+
+    public function createCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+        ]);
+
+        Category::create($validated);
+
+        return back()->with('status', 'Category added successfully.');
+    }
+
+    public function deleteCategory(Request $request, Category $category)
+    {
+        $category->delete();
+
+        return back()->with('status', 'Category deleted successfully.');
+    }
+
+    public function createDailyWord(Request $request)
+    {
+        $validated = $request->validate([
+            'snippet_id' => 'required|exists:snippets,id',
+            'category_id' => 'required|exists:categories,id',
+            'scheduled_for' => 'required|date',
+        ]);
+
+        DailyWord::create($validated);
+
+        return back()->with('status', 'Daily word scheduled successfully.');
+    }
+
+    public function deleteDailyWord(Request $request, DailyWord $dailyWord)
+    {
+        $dailyWord->delete();
+
+        return back()->with('status', 'Daily word removed successfully.');
+    }
+
+    public function updateUserRole(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'role' => 'required|string|in:user,creator,admin',
+        ]);
+
+        $user->update(['role' => $validated['role']]);
+
+        return back()->with('status', 'User role updated successfully.');
     }
 
     public function verifyOtp(Request $request)
@@ -106,5 +192,55 @@ class AdminPageController extends Controller
         if (!empty($user->email)) {
             Mail::to($user->email)->send(new VerificationOtp($user->email, $otp));
         }
+    }
+
+    private function deleteAssociatedSupabaseObjects(Message $message): void
+    {
+        $supabase = [
+            'url' => config('services.supabase.url'),
+            'key' => config('services.supabase.key'),
+            'audio_bucket' => config('services.supabase.audio_bucket', 'creator-audio'),
+            'image_bucket' => config('services.supabase.image_bucket', 'creator-images'),
+        ];
+
+        if (!$supabase['url'] || !$supabase['key']) {
+            return;
+        }
+
+        foreach (['audio_url' => $supabase['audio_bucket'], 'image_url' => $supabase['image_bucket']] as $field => $bucket) {
+            if (!empty($message->{$field})) {
+                $objectPath = $this->extractSupabaseObjectPath($message->{$field}, $bucket);
+                if ($objectPath) {
+                    $this->deleteSupabaseObject($supabase['url'], $supabase['key'], $bucket, $objectPath);
+                }
+            }
+        }
+    }
+
+    private function extractSupabaseObjectPath(string $url, string $bucket): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+        if (!$path) {
+            return null;
+        }
+
+        $needle = "/storage/v1/object/public/{$bucket}/";
+        $position = strpos($path, $needle);
+
+        if ($position === false) {
+            return null;
+        }
+
+        return substr($path, $position + strlen($needle));
+    }
+
+    private function deleteSupabaseObject(string $baseUrl, string $serviceKey, string $bucket, string $objectPath): bool
+    {
+        $response = Http::withHeaders([
+            'apikey' => $serviceKey,
+            'Authorization' => 'Bearer '.$serviceKey,
+        ])->delete(rtrim($baseUrl, '/')."/storage/v1/object/{$bucket}/{$objectPath}");
+
+        return !$response->failed();
     }
 }

@@ -14,6 +14,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/logout', [AdminPageController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('email.verified')->group(function () {
-        Route::get('/admin', [AdminPageController::class, 'showDashboard'])->name('admin.dashboard');
+            Route::get('/admin', [AdminPageController::class, 'showDashboard'])->name('admin.dashboard');
+            Route::post('/admin/messages/{message}/status', [AdminPageController::class, 'updateMessageStatus'])->name('admin.messages.status');
+            Route::post('/admin/messages/{message}/delete', [AdminPageController::class, 'deleteMessage'])->name('admin.messages.delete');
+            Route::post('/admin/categories', [AdminPageController::class, 'createCategory'])->name('admin.categories.create');
+            Route::post('/admin/categories/{category}/delete', [AdminPageController::class, 'deleteCategory'])->name('admin.categories.delete');
+            Route::post('/admin/daily-words', [AdminPageController::class, 'createDailyWord'])->name('admin.dailyWords.create');
+            Route::post('/admin/daily-words/{dailyWord}/delete', [AdminPageController::class, 'deleteDailyWord'])->name('admin.dailyWords.delete');
+            Route::post('/admin/users/{user}/role', [AdminPageController::class, 'updateUserRole'])->name('admin.users.role');
     });
 });
