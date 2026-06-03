@@ -14,6 +14,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/logout', [AdminPageController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('email.verified')->group(function () {
-        Route::view('/admin', 'admin.dashboard')->name('admin.dashboard');
+        Route::get('/admin', [AdminPageController::class, 'showDashboard'])->name('admin.dashboard');
     });
 });

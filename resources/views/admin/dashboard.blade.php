@@ -29,16 +29,20 @@
 
         <div class="admin-grid">
             <div class="panel-card">
-                <strong>98+</strong>
-                <span>Active creators signed in this month</span>
+                <strong>{{ $data['users'] ?? '—' }}</strong>
+                <span>Total registered users</span>
             </div>
             <div class="panel-card">
-                <strong>1.2K</strong>
-                <span>Messages processed with audio and image support</span>
+                <strong>{{ $data['creators'] ?? '—' }}</strong>
+                <span>Active creators</span>
             </div>
             <div class="panel-card">
-                <strong>24</strong>
-                <span>Daily words scheduled for release</span>
+                <strong>{{ $data['messages'] ?? '—' }}</strong>
+                <span>Messages processed</span>
+            </div>
+            <div class="panel-card">
+                <strong>{{ $data['daily_words'] ?? '—' }}</strong>
+                <span>Daily words scheduled</span>
             </div>
         </div>
 

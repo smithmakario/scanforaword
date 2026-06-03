@@ -53,6 +53,15 @@ class AdminPageController extends Controller
         return view('admin.verify');
     }
 
+    public function showDashboard(Request $request)
+    {
+        $dashboardResponse = app(\App\Http\Controllers\Api\AdminController::class)->dashboard($request);
+        $payload = json_decode($dashboardResponse->getContent(), true);
+        $data = $payload['data'] ?? [];
+
+        return view('admin.dashboard', compact('data'));
+    }
+
     public function verifyOtp(Request $request)
     {
         $request->validate([
