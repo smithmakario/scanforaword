@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\DailyWordController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CreatorController;
 use App\Http\Controllers\Api\LibraryController;
+use App\Http\Controllers\Api\ShareController;
 
 Route::middleware('throttle:api')->group(function () {
     Route::get('/health', function () {
@@ -56,6 +57,7 @@ Route::middleware('throttle:api')->group(function () {
             Route::get('/messages', [CreatorController::class, 'getRecentUploads']);
             Route::post('/upload', [CreatorController::class, 'uploadMessage']);
             Route::delete('/messages/{message}', [CreatorController::class, 'deleteMessage']);
+            Route::post('/messages/{message}/share', [ShareController::class, 'createMessageShare']);
         });
 
         // Library Routes
@@ -74,4 +76,9 @@ Route::middleware('throttle:api')->group(function () {
     Route::get('/categories', [DailyWordController::class, 'getCategories']);
     Route::post('/preferences', [DailyWordController::class, 'setPreferences']);
     Route::get('/daily-word', [DailyWordController::class, 'getToday']);
+
+    // Share Routes
+    Route::post('/share/messages/{message}', [ShareController::class, 'createMessageShare']);
+    Route::post('/share/daily-words/{dailyWord}', [ShareController::class, 'createDailyWordShare']);
+    Route::get('/share/{token}', [ShareController::class, 'getSharedItem']);
 });

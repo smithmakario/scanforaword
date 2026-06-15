@@ -269,6 +269,57 @@ Endpoints for searching content and viewing trends.
 
 ---
 
+## 8. Sharing
+Endpoints for generating and consuming shared URLs and QR codes.
+
+### Create Message Share Link
+*   **URL:** `/share/messages/{message}`
+*   **Method:** `POST`
+*   **Auth Required:** Yes
+*   **Access:** Creator may share their own messages, admins may share any message.
+*   **Success Response:**
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "share_url": "http://127.0.0.1:8000/share/ABC123DEF4",
+        "qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F127.0.0.1%3A8000%2Fshare%2FABC123DEF4",
+        "message": { ...message }
+      }
+    }
+    ```
+
+### Create Daily Word Share Link
+*   **URL:** `/share/daily-words/{dailyWord}`
+*   **Method:** `POST`
+*   **Auth Required:** Yes
+*   **Access:** Admin only
+*   **Success Response:** Returns the public share URL and generated QR code.
+
+### Get Shared Item
+*   **URL:** `/share/{token}`
+*   **Method:** `GET`
+*   **Auth Required:** No
+*   **Success Response:**
+    ```json
+    {
+      "status": "success",
+      "data": {
+        "type": "Message",
+        "item": { ...shared_item },
+        "share_url": "http://127.0.0.1:8000/share/ABC123DEF4",
+        "qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http%3A%2F%2F127.0.0.1%3A8000%2Fshare%2FABC123DEF4"
+      }
+    }
+    ```
+
+### Usage Notes for Mobile App
+- Use the `share_url` directly in mobile navigation or social link sharing.
+- The `qr_code_url` provides a ready-made QR image that can be displayed in the app.
+- The public `GET /share/{token}` endpoint allows any device to resolve the shared item JSON.
+
+---
+
 ## 5. Library & Bookmarks (Auth Required)
 Endpoints for managing saved insights.
 
