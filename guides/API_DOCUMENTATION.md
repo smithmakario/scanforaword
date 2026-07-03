@@ -138,11 +138,7 @@ Endpoints for creators to manage content and view analytics.
 
 *   **Direct mode parameters:**
     *   `audio_file` (File, Optional) - direct audio upload
-    *   `audio_base64` (String, Optional) - base64-encoded audio content
-    *   `audio_extension` (String, Optional, one of `mp3`, `wav`, `m4a`, `ogg`, `aac`)
     *   `image_file` (File, Optional) - direct cover image upload
-    *   `image_base64` (String, Optional) - base64-encoded image content
-    *   `image_extension` (String, Optional, one of `jpg`, `jpeg`, `png`, `gif`, `webp`)
 
 *   **Indirect mode parameters:**
     *   `audio_url` (String, Optional) - external audio link

@@ -109,26 +109,19 @@ class CreatorController extends Controller
             'audio_url' => 'nullable|url',
             'image_url' => 'nullable|url',
             'audio_file' => 'nullable|file|mimes:mp3,wav,m4a,ogg,aac|max:102400',
-            'audio_base64' => 'nullable|string',
-            'audio_extension' => 'nullable|string|in:mp3,wav,m4a,ogg,aac',
             'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'image_base64' => 'nullable|string',
-            'image_extension' => 'nullable|string|in:jpg,jpeg,png,gif,webp',
         ]);
 
         $audioUrl = null;
         $imageUrl = null;
 
         if ($validated['mode'] === 'direct') {
-            $needsSupabase = $request->hasFile('audio_file')
-                || !empty($validated['audio_base64'])
-                || $request->hasFile('image_file')
-                || !empty($validated['image_base64']);
+            $hasFileUpload = $request->hasFile('audio_file') || $request->hasFile('image_file');
 
-            if (! $needsSupabase) {
+            if (! $hasFileUpload) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Direct mode requires direct audio or image upload via file or base64 payload.'
+                    'message' => 'Direct mode requires an audio_file or image_file upload.'
                 ], 422);
             }
 
@@ -151,24 +144,6 @@ class CreatorController extends Controller
                     $audioFile->get(),
                     $audioFile->getMimeType()
                 );
-            } elseif (!empty($validated['audio_base64'])) {
-                $audioData = base64_decode($validated['audio_base64'], true);
-                if ($audioData === false) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Invalid base64 audio payload.'
-                    ], 422);
-                }
-
-                $extension = $validated['audio_extension'] ?? 'mp3';
-                $audioUrl = $this->uploadSupabaseFile(
-                    $supabase['url'],
-                    $supabase['key'],
-                    $supabase['audio_bucket'],
-                    $this->buildObjectPath('audio', $this->normalizeExtension($extension)),
-                    $audioData,
-                    $this->extensionToMimeType($extension)
-                );
             }
 
             if ($request->hasFile('image_file')) {
@@ -180,24 +155,6 @@ class CreatorController extends Controller
                     $this->buildObjectPath('image', $imageFile->getClientOriginalExtension()),
                     $imageFile->get(),
                     $imageFile->getMimeType()
-                );
-            } elseif (!empty($validated['image_base64'])) {
-                $imageData = base64_decode($validated['image_base64'], true);
-                if ($imageData === false) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Invalid base64 image payload.'
-                    ], 422);
-                }
-
-                $extension = $validated['image_extension'] ?? 'jpg';
-                $imageUrl = $this->uploadSupabaseFile(
-                    $supabase['url'],
-                    $supabase['key'],
-                    $supabase['image_bucket'],
-                    $this->buildObjectPath('image', $this->normalizeExtension($extension)),
-                    $imageData,
-                    $this->extensionToMimeType($extension)
                 );
             }
         } else {

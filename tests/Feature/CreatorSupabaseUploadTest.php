@@ -84,6 +84,25 @@ class CreatorSupabaseUploadTest extends TestCase
             ->assertJsonPath('data.image_url', 'https://images.example.com/cover.jpg');
     }
 
+    public function test_direct_upload_requires_file_upload(): void
+    {
+        $creator = User::factory()->create([
+            'role' => 'creator',
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($creator, 'sanctum')
+            ->post('/api/creator/upload', [
+                'mode' => 'direct',
+                'title' => 'Direct Upload Without Files',
+                'keywords' => 'faith,hope',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'Direct mode requires an audio_file or image_file upload.');
+    }
+
     public function test_creator_can_delete_own_message_and_supabase_objects(): void
     {
         Http::fake([
